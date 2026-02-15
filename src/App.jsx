@@ -52,14 +52,12 @@ function App() {
           </button>
         </aside>
 
-        {/* MIDDLE CANVAS (The Scene) */}
-        <main style={{ 
-          flex: 1,      // This makes the center take up all remaining space
-          position: "relative", 
-          background: "#000" 
-        }}>
-          <ThreeScene />
-        </main>
+        <main style={{ flex: 1, position: "relative", background: "#000" }}>
+  {/* The container must be able to expand */}
+  <div style={{ position: "absolute", inset: 0 }}>
+     <ThreeScene />
+  </div>
+</main>
 
         {/* RIGHT MENU */}
         <aside style={{ 
