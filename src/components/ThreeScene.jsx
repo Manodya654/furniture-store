@@ -58,33 +58,27 @@ const ThreeScene = () => {
     // ---------------------------
     const loader = new GLTFLoader();
 
-    loader.load(
-      "/models/chair.glb", 
-      (gltf) => {
-        const model = gltf.scene;
+    loader.load("/models/chair.glb", (gltf) => {
+  const model = gltf.scene;
 
-        // Center the model
-        const box = new THREE.Box3().setFromObject(model);
-        const center = box.getCenter(new THREE.Vector3());
-        model.position.sub(center);
+  scene.add(model);
 
-        // Put it on floor
-        const size = box.getSize(new THREE.Vector3());
-        model.position.y += size.y / 2;
+  // 🔹 Compute bounding box
+  const box = new THREE.Box3().setFromObject(model);
+  const size = box.getSize(new THREE.Vector3());
+  const center = box.getCenter(new THREE.Vector3());
 
-        // Scale if needed
-        model.scale.set(1.5, 1.5, 1.5);
+  // 🔹 Center model
+  model.position.sub(center);
 
-        // Position in room
-        model.position.set(0, 0, 0);
+  // 🔹 Put it on the floor
+  model.position.y += size.y / 2;
 
-        scene.add(model);
-      },
-      undefined,
-      (error) => {
-        console.error("GLB load error:", error);
-      }
-    );
+  // 🔹 Auto scale to target height
+  const targetHeight = 4; // desired chair height in scene units
+  const scaleFactor = targetHeight / size.y;
+  model.scale.setScalar(scaleFactor);
+});
 
     // ANIMATION LOOP
     let animationId;
