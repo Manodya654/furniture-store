@@ -9,19 +9,48 @@ const ThreeScene = ({ onSelectObject }) => {
   const sceneRef = useRef(null);
   const transformRef = useRef(null);
   const furnitureListRef = useRef([]);
-  const initializedRef = useRef(false);
 
   useEffect(() => {
     const container = mountRef.current;
-    if (!container || initializedRef.current) return;
+    if (!container) return;
     
-    initializedRef.current = true;
+    // Skip if already initialized (canvas exists)
+    const existingCanvas = container.querySelector('canvas');
+    if (existingCanvas) {
+      console.log("⏭️ Skipping re-initialization (canvas exists)");
+      
+      // Reconnect to existing scene if refs are empty
+      if (!sceneRef.current && window.threeScene) {
+        sceneRef.current = window.threeScene;
+        transformRef.current = window.threeTransform;
+        furnitureListRef.current = window.threeFurniture || [];
+        console.log("🔗 Reconnected to existing scene");
+        
+        // Make sure transform is in the scene
+        if (window.threeTransform && window.threeScene) {
+          if (!window.threeScene.children.includes(window.threeTransform)) {
+            window.threeScene.add(window.threeTransform);
+            console.log("✅ Re-added transform controls to scene");
+          }
+        }
+        
+        // Restart animation loop if needed
+        if (window.threeAnimationId) {
+          console.log("🎬 Animation already running");
+        }
+      }
+      return;
+    }
+    
     console.log("🎬 Initializing Three.js scene...");
 
     // --- 1. Basic Setup ---
     const scene = new THREE.Scene();
     scene.background = new THREE.Color(0xeeeeee);
     sceneRef.current = scene;
+    
+    // Store globally to persist through React strict mode
+    window.threeScene = scene;
 
     const camera = new THREE.PerspectiveCamera(75, container.clientWidth / container.clientHeight, 0.1, 1000);
     camera.position.set(10, 8, 12);
@@ -34,12 +63,20 @@ const ThreeScene = ({ onSelectObject }) => {
 
     const orbit = new OrbitControls(camera, renderer.domElement);
     orbit.enableDamping = true;
+    
+    // Store globally
+    window.threeOrbit = orbit;
+    window.threeCamera = camera;
+    window.threeRenderer = renderer;
 
     // --- 2. Interaction Controls (The Gizmo) ---
     const transform = new TransformControls(camera, renderer.domElement);
     transform.setMode("translate"); // Start with move mode
-    scene.add(transform);
+    scene.add(transform); // Add the control gizmo to scene
     transformRef.current = transform;
+    
+    // Store globally to persist through React strict mode
+    window.threeTransform = transform;
 
     // Disable OrbitControls while dragging furniture
     transform.addEventListener("dragging-changed", (e) => {
@@ -87,6 +124,30 @@ const ThreeScene = ({ onSelectObject }) => {
 
     // --- 5. Furniture Creation Functions ---
     const loader = new GLTFLoader();
+    
+    // Store globally to persist through React strict mode  
+    if (!window.threeFurniture) {
+      window.threeFurniture = [];
+    }
+    furnitureListRef.current = window.threeFurniture;
+
+    // Helper function to get active scene references
+    const getSceneRefs = () => {
+      return {
+        scene: window.threeScene || scene,
+        transform: window.threeTransform || transform,
+        onSelectObject
+      };
+    };
+    
+    // Helper to generate random position for new furniture
+    const getRandomPosition = () => {
+      const spread = 6; // How far apart to spawn items
+      return {
+        x: (Math.random() - 0.5) * spread,
+        z: (Math.random() - 0.5) * spread
+      };
+    };
 
     // Create a simple table (fallback if GLB doesn't exist)
     const createTable = () => {
@@ -289,6 +350,7 @@ const ThreeScene = ({ onSelectObject }) => {
     // Add furniture functions
     window.addChair = () => {
       console.log("🔵 Add Chair button clicked");
+      const refs = getSceneRefs();
       
       // Try to load GLB first, fallback to simple chair if it fails
       loader.load(
@@ -311,6 +373,11 @@ const ThreeScene = ({ onSelectObject }) => {
           model.position.sub(center);
           model.position.y = size.y / 2;
           
+          // Add random offset so furniture doesn't stack
+          const randomPos = getRandomPosition();
+          model.position.x += randomPos.x;
+          model.position.z += randomPos.z;
+          
           const targetHeight = 3.5;
           const scale = targetHeight / size.y;
           model.scale.setScalar(scale);
@@ -319,17 +386,18 @@ const ThreeScene = ({ onSelectObject }) => {
           model.userData.originalColor = 0x4682B4;
 
           // IMPORTANT: Add to scene first, then to list, then attach transform
-          scene.add(model);
+          refs.scene.add(model);
           console.log("✅ Chair added to scene");
           
-          furnitureListRef.current.push(model);
-          console.log("✅ Chair added to furniture list, total items:", furnitureListRef.current.length);
+          window.threeFurniture.push(model);
+          furnitureListRef.current = window.threeFurniture;
+          console.log("✅ Chair added to furniture list, total items:", window.threeFurniture.length);
           
           // Small delay before attaching transform to ensure scene is ready
           setTimeout(() => {
-            if (transform && scene.children.includes(model)) {
-              transform.attach(model);
-              if (onSelectObject) onSelectObject(model);
+            if (refs.transform && refs.scene.children.includes(model)) {
+              refs.transform.attach(model);
+              if (refs.onSelectObject) refs.onSelectObject(model);
               console.log("✅ Transform attached to chair");
             }
           }, 10);
@@ -343,13 +411,13 @@ const ThreeScene = ({ onSelectObject }) => {
           console.error("Error details:", error);
           // Use fallback chair
           const chair = createChair();
-          scene.add(chair);
-          furnitureListRef.current.push(chair);
+          refs.scene.add(chair);
+          window.threeFurniture.push(chair);
           
           setTimeout(() => {
-            if (transform && scene.children.includes(chair)) {
-              transform.attach(chair);
-              if (onSelectObject) onSelectObject(chair);
+            if (refs.transform && refs.scene.children.includes(chair)) {
+              refs.transform.attach(chair);
+              if (refs.onSelectObject) refs.onSelectObject(chair);
             }
           }, 10);
         }
@@ -357,35 +425,259 @@ const ThreeScene = ({ onSelectObject }) => {
     };
 
     window.addTable = () => {
-      const table = createTable();
-      scene.add(table);
-      furnitureListRef.current.push(table);
-      transform.attach(table);
-      if (onSelectObject) onSelectObject(table);
+      const refs = getSceneRefs();
+      console.log("🔵 Add Table button clicked");
+      
+      loader.load(
+        "/models/table.glb",
+        (gltf) => {
+          console.log("✅ Table GLB loaded successfully");
+          const model = gltf.scene;
+          
+          model.traverse((node) => {
+            if (node.isMesh) {
+              node.castShadow = true;
+              node.receiveShadow = true;
+            }
+          });
+
+          const box = new THREE.Box3().setFromObject(model);
+          const size = box.getSize(new THREE.Vector3());
+          const center = box.getCenter(new THREE.Vector3());
+          
+          model.position.sub(center);
+          model.position.y = size.y / 2;
+          
+          // Add random offset so furniture doesn't stack
+          const randomPos = getRandomPosition();
+          model.position.x += randomPos.x;
+          model.position.z += randomPos.z;
+          
+          const targetHeight = 2;
+          const scale = targetHeight / size.y;
+          model.scale.setScalar(scale);
+
+          model.userData.type = "table";
+          model.userData.originalColor = 0x8B4513;
+
+          refs.scene.add(model);
+          console.log("✅ Table added to scene");
+          window.threeFurniture.push(model);
+          
+          setTimeout(() => {
+            if (refs.transform && refs.scene.children.includes(model)) {
+              refs.transform.attach(model);
+              if (refs.onSelectObject) refs.onSelectObject(model);
+            }
+          }, 10);
+        },
+        undefined,
+        (error) => {
+          console.warn("⚠️ Could not load table.glb, using fallback table model");
+          const table = createTable();
+          refs.scene.add(table);
+          window.threeFurniture.push(table);
+          
+          setTimeout(() => {
+            if (refs.transform && refs.scene.children.includes(table)) {
+              refs.transform.attach(table);
+              if (refs.onSelectObject) refs.onSelectObject(table);
+            }
+          }, 10);
+        }
+      );
     };
 
     window.addSofa = () => {
-      const sofa = createSofa();
-      scene.add(sofa);
-      furnitureListRef.current.push(sofa);
-      transform.attach(sofa);
-      if (onSelectObject) onSelectObject(sofa);
+      const refs = getSceneRefs();
+      console.log("🔵 Add Sofa button clicked");
+      
+      loader.load(
+        "/models/sofa.glb",
+        (gltf) => {
+          console.log("✅ Sofa GLB loaded successfully");
+          const model = gltf.scene;
+          
+          model.traverse((node) => {
+            if (node.isMesh) {
+              node.castShadow = true;
+              node.receiveShadow = true;
+            }
+          });
+
+          const box = new THREE.Box3().setFromObject(model);
+          const size = box.getSize(new THREE.Vector3());
+          const center = box.getCenter(new THREE.Vector3());
+          
+          model.position.sub(center);
+          model.position.y = size.y / 2;
+          
+          // Add random offset so furniture doesn't stack
+          const randomPos = getRandomPosition();
+          model.position.x += randomPos.x;
+          model.position.z += randomPos.z;
+          
+          const targetHeight = 2.5;
+          const scale = targetHeight / size.y;
+          model.scale.setScalar(scale);
+
+          model.userData.type = "sofa";
+          model.userData.originalColor = 0x4169E1;
+
+          refs.scene.add(model);
+          console.log("✅ Sofa added to scene");
+          window.threeFurniture.push(model);
+          
+          setTimeout(() => {
+            if (refs.transform && refs.scene.children.includes(model)) {
+              refs.transform.attach(model);
+              if (refs.onSelectObject) refs.onSelectObject(model);
+            }
+          }, 10);
+        },
+        undefined,
+        (error) => {
+          console.warn("⚠️ Could not load sofa.glb, using fallback sofa model");
+          const sofa = createSofa();
+          refs.scene.add(sofa);
+          window.threeFurniture.push(sofa);
+          
+          setTimeout(() => {
+            if (refs.transform && refs.scene.children.includes(sofa)) {
+              refs.transform.attach(sofa);
+              if (refs.onSelectObject) refs.onSelectObject(sofa);
+            }
+          }, 10);
+        }
+      );
     };
 
     window.addBed = () => {
-      const bed = createBed();
-      scene.add(bed);
-      furnitureListRef.current.push(bed);
-      transform.attach(bed);
-      if (onSelectObject) onSelectObject(bed);
+      const refs = getSceneRefs();
+      console.log("🔵 Add Bed button clicked");
+      
+      loader.load(
+        "/models/bed.glb",
+        (gltf) => {
+          console.log("✅ Bed GLB loaded successfully");
+          const model = gltf.scene;
+          
+          model.traverse((node) => {
+            if (node.isMesh) {
+              node.castShadow = true;
+              node.receiveShadow = true;
+            }
+          });
+
+          const box = new THREE.Box3().setFromObject(model);
+          const size = box.getSize(new THREE.Vector3());
+          const center = box.getCenter(new THREE.Vector3());
+          
+          model.position.sub(center);
+          model.position.y = size.y / 2;
+          
+          // Add random offset so furniture doesn't stack
+          const randomPos = getRandomPosition();
+          model.position.x += randomPos.x;
+          model.position.z += randomPos.z;
+          
+          const targetHeight = 2;
+          const scale = targetHeight / size.y;
+          model.scale.setScalar(scale);
+
+          model.userData.type = "bed";
+          model.userData.originalColor = 0xFFFFFF;
+
+          refs.scene.add(model);
+          console.log("✅ Bed added to scene");
+          window.threeFurniture.push(model);
+          
+          setTimeout(() => {
+            if (refs.transform && refs.scene.children.includes(model)) {
+              refs.transform.attach(model);
+              if (refs.onSelectObject) refs.onSelectObject(model);
+            }
+          }, 10);
+        },
+        undefined,
+        (error) => {
+          console.warn("⚠️ Could not load bed.glb, using fallback bed model");
+          const bed = createBed();
+          refs.scene.add(bed);
+          window.threeFurniture.push(bed);
+          
+          setTimeout(() => {
+            if (refs.transform && refs.scene.children.includes(bed)) {
+              refs.transform.attach(bed);
+              if (refs.onSelectObject) refs.onSelectObject(bed);
+            }
+          }, 10);
+        }
+      );
     };
 
     window.addLamp = () => {
-      const lamp = createLamp();
-      scene.add(lamp);
-      furnitureListRef.current.push(lamp);
-      transform.attach(lamp);
-      if (onSelectObject) onSelectObject(lamp);
+      const refs = getSceneRefs();
+      console.log("🔵 Add Lamp button clicked");
+      
+      loader.load(
+        "/models/lamp.glb",
+        (gltf) => {
+          console.log("✅ Lamp GLB loaded successfully");
+          const model = gltf.scene;
+          
+          model.traverse((node) => {
+            if (node.isMesh) {
+              node.castShadow = true;
+              node.receiveShadow = true;
+            }
+          });
+
+          const box = new THREE.Box3().setFromObject(model);
+          const size = box.getSize(new THREE.Vector3());
+          const center = box.getCenter(new THREE.Vector3());
+          
+          model.position.sub(center);
+          model.position.y = size.y / 2;
+          
+          // Add random offset so furniture doesn't stack
+          const randomPos = getRandomPosition();
+          model.position.x += randomPos.x;
+          model.position.z += randomPos.z;
+          
+          const targetHeight = 2.5;
+          const scale = targetHeight / size.y;
+          model.scale.setScalar(scale);
+
+          model.userData.type = "lamp";
+          model.userData.originalColor = 0xFFF8DC;
+
+          refs.scene.add(model);
+          console.log("✅ Lamp added to scene");
+          window.threeFurniture.push(model);
+          
+          setTimeout(() => {
+            if (refs.transform && refs.scene.children.includes(model)) {
+              refs.transform.attach(model);
+              if (refs.onSelectObject) refs.onSelectObject(model);
+            }
+          }, 10);
+        },
+        undefined,
+        (error) => {
+          console.warn("⚠️ Could not load lamp.glb, using fallback lamp model");
+          const lamp = createLamp();
+          refs.scene.add(lamp);
+          window.threeFurniture.push(lamp);
+          
+          setTimeout(() => {
+            if (refs.transform && refs.scene.children.includes(lamp)) {
+              refs.transform.attach(lamp);
+              if (refs.onSelectObject) refs.onSelectObject(lamp);
+            }
+          }, 10);
+        }
+      );
     };
 
     // Change color of selected object
@@ -422,18 +714,26 @@ const ThreeScene = ({ onSelectObject }) => {
     const mouse = new THREE.Vector2();
 
     const onPointerDown = (event) => {
+      const transform = window.threeTransform;
+      if (!transform) {
+        console.warn("⚠️ Transform controls not available");
+        return;
+      }
+      
       const rect = renderer.domElement.getBoundingClientRect();
       mouse.x = ((event.clientX - rect.left) / container.clientWidth) * 2 - 1;
       mouse.y = -((event.clientY - rect.top) / container.clientHeight) * 2 + 1;
 
       raycaster.setFromCamera(mouse, camera);
-      const intersects = raycaster.intersectObjects(furnitureListRef.current, true);
+      const furnitureList = window.threeFurniture || [];
+      const intersects = raycaster.intersectObjects(furnitureList, true);
 
       if (intersects.length > 0) {
         let target = intersects[0].object;
-        while (target.parent && !furnitureListRef.current.includes(target)) {
+        while (target.parent && !furnitureList.includes(target)) {
           target = target.parent;
         }
+        console.log("🎯 Selected:", target.userData.type);
         transform.attach(target);
         if (onSelectObject) onSelectObject(target);
       } else {
@@ -445,15 +745,18 @@ const ThreeScene = ({ onSelectObject }) => {
     };
 
     const onKeyDown = (event) => {
-      if (!transform.object) return;
+      const transform = window.threeTransform;
+      const scene = window.threeScene;
+      if (!transform || !transform.object) return;
 
       // Delete/Backspace to remove item
       if (event.key === "Delete" || event.key === "Backspace") {
         const selected = transform.object;
         transform.detach();
         scene.remove(selected);
-        const index = furnitureListRef.current.indexOf(selected);
-        if (index > -1) furnitureListRef.current.splice(index, 1);
+        const furnitureList = window.threeFurniture || [];
+        const index = furnitureList.indexOf(selected);
+        if (index > -1) furnitureList.splice(index, 1);
         if (onSelectObject) onSelectObject(null);
       }
 
@@ -472,6 +775,7 @@ const ThreeScene = ({ onSelectObject }) => {
       animationId = requestAnimationFrame(animate);
       orbit.update();
       renderer.render(scene, camera);
+      window.threeAnimationId = animationId; // Store globally
     };
     animate();
 
@@ -486,11 +790,20 @@ const ThreeScene = ({ onSelectObject }) => {
       console.log("🧹 Cleaning up Three.js scene...");
       window.removeEventListener("resize", handleResize);
       window.removeEventListener("keydown", onKeyDown);
-      renderer.domElement.removeEventListener("pointerdown", onPointerDown);
-      cancelAnimationFrame(animationId);
-      renderer.dispose();
-      if (container.contains(renderer.domElement)) container.removeChild(renderer.domElement);
-      initializedRef.current = false;
+      if (renderer.domElement) {
+        renderer.domElement.removeEventListener("pointerdown", onPointerDown);
+      }
+      
+      // Don't cancel animation or cleanup in development mode
+      // This keeps everything running through React strict mode
+      const shouldFullCleanup = process.env.NODE_ENV === 'production';
+      if (shouldFullCleanup) {
+        cancelAnimationFrame(animationId);
+        renderer.dispose();
+        if (container && renderer.domElement && container.contains(renderer.domElement)) {
+          container.removeChild(renderer.domElement);
+        }
+      }
     };
   }, [onSelectObject]);
 
