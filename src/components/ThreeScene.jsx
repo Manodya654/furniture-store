@@ -37,6 +37,39 @@ const ThreeScene = ({ onSelect }) => {
       orbit.enabled = !e.value;
     });
 
+    // --- Inside useEffect, after creating 'transform' ---
+
+transform.addEventListener("change", () => {
+  if (transform.object) {
+    const obj = transform.object;
+    
+    // 1. Calculate the actual size of the object to keep it inside
+    const box = new THREE.Box3().setFromObject(obj);
+    const size = box.getSize(new THREE.Vector3());
+    
+    // 2. Set Room Boundaries (based on your BoxGeometry(30, 15, 30))
+    const halfWidth = 15;
+    const halfDepth = 15;
+    const roomFloor = 0;
+    const roomCeiling = 15;
+
+    // 3. Constrain X (Left/Right Walls)
+    const paddingX = size.x / 2;
+    if (obj.position.x > halfWidth - paddingX) obj.position.x = halfWidth - paddingX;
+    if (obj.position.x < -halfWidth + paddingX) obj.position.x = -halfWidth + paddingX;
+
+    // 4. Constrain Z (Front/Back Walls)
+    const paddingZ = size.z / 2;
+    if (obj.position.z > halfDepth - paddingZ) obj.position.z = halfDepth - paddingZ;
+    if (obj.position.z < -halfDepth + paddingZ) obj.position.z = -halfDepth + paddingZ;
+
+    // 5. Constrain Y (Floor/Ceiling)
+    // This stops it from passing through the floor
+    if (obj.position.y < roomFloor) obj.position.y = roomFloor;
+    if (obj.position.y > roomCeiling - size.y) obj.position.y = roomCeiling - size.y;
+  }
+});
+
     // --- Lighting ---
     scene.add(new THREE.AmbientLight(0xffffff, 0.6));
     const light = new THREE.DirectionalLight(0xffffff, 1);
@@ -78,6 +111,10 @@ const ThreeScene = ({ onSelect }) => {
         // Wrapper to fix "Can't Move" issues with odd GLB origins
         const wrapper = new THREE.Group();
         wrapper.add(model);
+        scene.add(wrapper);
+
+        model.position.y = -box.min.y; 
+
         scene.add(wrapper);
         
         furnitureList.current.push(wrapper);
