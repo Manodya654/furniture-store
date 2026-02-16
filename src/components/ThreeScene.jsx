@@ -63,6 +63,7 @@ const ThreeScene = ({ onSelectObject }) => {
 
     const orbit = new OrbitControls(camera, renderer.domElement);
     orbit.enableDamping = true;
+    orbit.dampingFactor = 0.05;
     
     // Store globally
     window.threeOrbit = orbit;
@@ -72,15 +73,40 @@ const ThreeScene = ({ onSelectObject }) => {
     // --- 2. Interaction Controls (The Gizmo) ---
     const transform = new TransformControls(camera, renderer.domElement);
     transform.setMode("translate"); // Start with move mode
+    transform.setSize(2); // Make gizmo MUCH bigger
+    transform.setSpace('world'); // Use world space for easier manipulation
+    transform.visible = true; // Ensure it's visible
     scene.add(transform); // Add the control gizmo to scene
     transformRef.current = transform;
+    
+    console.log("🔧 Transform controls created:", {
+      mode: transform.mode,
+      size: transform.size,
+      visible: transform.visible,
+      inScene: scene.children.includes(transform)
+    });
     
     // Store globally to persist through React strict mode
     window.threeTransform = transform;
 
     // Disable OrbitControls while dragging furniture
-    transform.addEventListener("dragging-changed", (e) => {
-      orbit.enabled = !e.value;
+    transform.addEventListener("dragging-changed", (event) => {
+      const orbit = window.threeOrbit;
+      if (orbit) {
+        orbit.enabled = !event.value;
+        console.log(event.value ? "🔒 Dragging furniture - orbit disabled" : "🔓 Orbit re-enabled");
+      }
+    });
+    
+    // Also disable orbit when hovering over transform gizmo
+    transform.addEventListener("mouseDown", () => {
+      const orbit = window.threeOrbit;
+      if (orbit) orbit.enabled = false;
+    });
+    
+    transform.addEventListener("mouseUp", () => {
+      const orbit = window.threeOrbit;
+      if (orbit) orbit.enabled = true;
     });
 
     // Notify parent when object is attached/detached
@@ -140,13 +166,26 @@ const ThreeScene = ({ onSelectObject }) => {
       };
     };
     
-    // Helper to generate random position for new furniture
-    const getRandomPosition = () => {
-      const spread = 6; // How far apart to spawn items
-      return {
-        x: (Math.random() - 0.5) * spread,
-        z: (Math.random() - 0.5) * spread
-      };
+    // Helper to generate grid-based position for new furniture (prevents overlap)
+    let nextGridX = -6;
+    let nextGridZ = -6;
+    const gridSpacing = 4;
+    
+    const getNextGridPosition = () => {
+      const pos = { x: nextGridX, z: nextGridZ };
+      
+      // Move to next grid position
+      nextGridX += gridSpacing;
+      if (nextGridX > 6) {
+        nextGridX = -6;
+        nextGridZ += gridSpacing;
+      }
+      if (nextGridZ > 6) {
+        nextGridZ = -6; // Reset if we've filled the room
+      }
+      
+      console.log("📍 Grid position:", pos);
+      return pos;
     };
 
     // Create a simple table (fallback if GLB doesn't exist)
@@ -374,7 +413,7 @@ const ThreeScene = ({ onSelectObject }) => {
           model.position.y = size.y / 2;
           
           // Add random offset so furniture doesn't stack
-          const randomPos = getRandomPosition();
+          const randomPos = getNextGridPosition();
           model.position.x += randomPos.x;
           model.position.z += randomPos.z;
           
@@ -396,11 +435,25 @@ const ThreeScene = ({ onSelectObject }) => {
           // Small delay before attaching transform to ensure scene is ready
           setTimeout(() => {
             if (refs.transform && refs.scene.children.includes(model)) {
+              console.log("🔗 Attempting to attach transform to chair...");
               refs.transform.attach(model);
+              
+              // Force update transform visibility
+              refs.transform.visible = true;
+              
+              console.log("🎨 Transform state after attach:", {
+                hasObject: !!refs.transform.object,
+                objectType: refs.transform.object?.userData?.type,
+                visible: refs.transform.visible,
+                mode: refs.transform.mode
+              });
+              
               if (refs.onSelectObject) refs.onSelectObject(model);
               console.log("✅ Transform attached to chair");
+            } else {
+              console.error("❌ Cannot attach transform - scene or transform not ready");
             }
-          }, 10);
+          }, 100);
         }, 
         (progress) => {
           const percent = progress.total > 0 ? (progress.loaded / progress.total * 100).toFixed(0) : 0;
@@ -449,7 +502,7 @@ const ThreeScene = ({ onSelectObject }) => {
           model.position.y = size.y / 2;
           
           // Add random offset so furniture doesn't stack
-          const randomPos = getRandomPosition();
+          const randomPos = getNextGridPosition();
           model.position.x += randomPos.x;
           model.position.z += randomPos.z;
           
@@ -513,7 +566,7 @@ const ThreeScene = ({ onSelectObject }) => {
           model.position.y = size.y / 2;
           
           // Add random offset so furniture doesn't stack
-          const randomPos = getRandomPosition();
+          const randomPos = getNextGridPosition();
           model.position.x += randomPos.x;
           model.position.z += randomPos.z;
           
@@ -577,7 +630,7 @@ const ThreeScene = ({ onSelectObject }) => {
           model.position.y = size.y / 2;
           
           // Add random offset so furniture doesn't stack
-          const randomPos = getRandomPosition();
+          const randomPos = getNextGridPosition();
           model.position.x += randomPos.x;
           model.position.z += randomPos.z;
           
@@ -641,7 +694,7 @@ const ThreeScene = ({ onSelectObject }) => {
           model.position.y = size.y / 2;
           
           // Add random offset so furniture doesn't stack
-          const randomPos = getRandomPosition();
+          const randomPos = getNextGridPosition();
           model.position.x += randomPos.x;
           model.position.z += randomPos.z;
           
@@ -682,7 +735,8 @@ const ThreeScene = ({ onSelectObject }) => {
 
     // Change color of selected object
     window.changeObjectColor = (color) => {
-      if (!transform.object) return;
+      const transform = window.threeTransform;
+      if (!transform || !transform.object) return;
       
       const colorValue = typeof color === 'string' ? parseInt(color.replace('#', '0x'), 16) : color;
       
@@ -701,12 +755,45 @@ const ThreeScene = ({ onSelectObject }) => {
 
     // Get current selected object
     window.getSelectedObject = () => {
-      return transform.object;
+      const transform = window.threeTransform;
+      return transform ? transform.object : null;
     };
 
     // Set transform mode
     window.setTransformMode = (mode) => {
-      transform.setMode(mode);
+      const transform = window.threeTransform;
+      if (transform) {
+        transform.setMode(mode);
+        console.log("🔧 Transform mode changed to:", mode);
+      }
+    };
+    
+    // DEBUG: Test function to attach transform to first furniture
+    window.testTransform = () => {
+      const transform = window.threeTransform;
+      const furniture = window.threeFurniture;
+      
+      if (!transform) {
+        console.error("❌ No transform available");
+        return;
+      }
+      
+      if (!furniture || furniture.length === 0) {
+        console.error("❌ No furniture in scene");
+        return;
+      }
+      
+      console.log("🧪 Testing transform on first furniture item...");
+      const firstItem = furniture[0];
+      transform.attach(firstItem);
+      transform.visible = true;
+      
+      console.log("✅ Test complete:", {
+        attachedTo: firstItem.userData.type,
+        transformVisible: transform.visible,
+        transformMode: transform.mode,
+        hasObject: !!transform.object
+      });
     };
 
     // --- 6. Direct Mouse Selection & Deletion ---
@@ -733,9 +820,27 @@ const ThreeScene = ({ onSelectObject }) => {
         while (target.parent && !furnitureList.includes(target)) {
           target = target.parent;
         }
-        console.log("🎯 Selected:", target.userData.type);
-        transform.attach(target);
-        if (onSelectObject) onSelectObject(target);
+        console.log("🎯 Clicked object:", {
+          type: target.userData.type,
+          position: target.position,
+          inList: furnitureList.includes(target)
+        });
+        console.log("🔧 Transform state before attach:", {
+          available: !!transform,
+          mode: transform?.mode,
+          hasObject: !!transform?.object
+        });
+        
+        try {
+          transform.attach(target);
+          console.log("✅ Transform attached successfully!");
+          console.log("📍 Transform object:", transform.object);
+          console.log("👁️ Transform visible:", transform.visible);
+          
+          if (onSelectObject) onSelectObject(target);
+        } catch (error) {
+          console.error("❌ Failed to attach transform:", error);
+        }
       } else {
         if (transform.object) {
           transform.detach();

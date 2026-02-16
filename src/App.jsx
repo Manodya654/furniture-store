@@ -46,20 +46,20 @@ function App() {
       
       {/* TOP NAVBAR */}
       <nav style={{ 
-        height: "60px", 
+        height: "80px", 
         display: "flex", 
         alignItems: "center", 
         justifyContent: "space-between",
         padding: "0 30px", 
-        background: "linear-gradient(135deg, #667eea 0%, #764ba2 100%)", 
+        background: "#001056", 
         borderBottom: "1px solid #444",
         boxShadow: "0 2px 10px rgba(0,0,0,0.3)"
       }}>
         <h1 style={{ margin: 0, fontSize: "1.8rem", fontWeight: "600" }}>
-          🏠 Furniture Designer
+          Furnitures 
         </h1>
         <div style={{ fontSize: "0.9rem", opacity: 0.9 }}>
-          <strong>Tips:</strong> Click to select • G=Move • R=Rotate • S=Scale • Delete=Remove
+          <strong>Controls:</strong> Left Click=Select/Move • Right Click+Drag=Rotate View • Scroll=Zoom • G/R/S=Transform Modes • Delete=Remove
         </div>
       </nav>
 
@@ -82,7 +82,7 @@ function App() {
               marginTop: 0, 
               marginBottom: "15px", 
               fontSize: "1.2rem",
-              borderBottom: "2px solid #667eea",
+              borderBottom: "2px solid #011156",
               paddingBottom: "10px"
             }}>
               📦 Add Furniture
@@ -90,19 +90,19 @@ function App() {
             
             <div style={{ display: "flex", flexDirection: "column", gap: "10px" }}>
               <button onClick={() => window.addChair?.()} style={assetButtonStyle}>
-                🪑 Add Chair
+                Chair
               </button>
               <button onClick={() => window.addTable?.()} style={assetButtonStyle}>
-                🪵 Add Table
+                Table
               </button>
               <button onClick={() => window.addSofa?.()} style={assetButtonStyle}>
-                🛋️ Add Sofa
+                Sofa
               </button>
               <button onClick={() => window.addBed?.()} style={assetButtonStyle}>
-                🛏️ Add Bed
+                Bed
               </button>
               <button onClick={() => window.addLamp?.()} style={assetButtonStyle}>
-                💡 Add Lamp
+                Lamp
               </button>
             </div>
           </div>
@@ -124,8 +124,9 @@ function App() {
               lineHeight: "1.8",
               color: "#ccc"
             }}>
-              <li><strong>Left Click:</strong> Select object</li>
-              <li><strong>Right Click + Drag:</strong> Rotate view</li>
+              <li><strong>Left Click:</strong> Select & move object</li>
+              <li><strong>Drag Gizmo:</strong> Move/rotate/scale</li>
+              <li><strong>Right Click + Drag:</strong> Rotate camera</li>
               <li><strong>Scroll:</strong> Zoom in/out</li>
               <li><strong>G Key:</strong> Move mode</li>
               <li><strong>R Key:</strong> Rotate mode</li>
@@ -157,7 +158,7 @@ function App() {
               onClick={() => handleModeChange("translate")}
               style={{
                 ...modeButtonStyle,
-                background: transformMode === "translate" ? "#667eea" : "#444"
+                background: transformMode === "translate" ? "#2d326f" : "#444"
               }}
               title="Move (G)"
             >
@@ -167,7 +168,7 @@ function App() {
               onClick={() => handleModeChange("rotate")}
               style={{
                 ...modeButtonStyle,
-                background: transformMode === "rotate" ? "#667eea" : "#444"
+                background: transformMode === "rotate" ? "#2d326f" : "#444"
               }}
               title="Rotate (R)"
             >
@@ -177,7 +178,7 @@ function App() {
               onClick={() => handleModeChange("scale")}
               style={{
                 ...modeButtonStyle,
-                background: transformMode === "scale" ? "#667eea" : "#444"
+                background: transformMode === "scale" ? "#2d326f" : "#444"
               }}
               title="Scale (S)"
             >
@@ -202,7 +203,7 @@ function App() {
               marginTop: 0, 
               marginBottom: "15px",
               fontSize: "1.2rem",
-              borderBottom: "2px solid #667eea",
+              borderBottom: "2px solid #00115b",
               paddingBottom: "10px"
             }}>
               ⚙️ Properties
@@ -273,7 +274,7 @@ function App() {
                       onClick={() => handleModeChange("translate")}
                       style={{
                         ...transformButtonStyle,
-                        background: transformMode === "translate" ? "#667eea" : "#444"
+                        background: transformMode === "translate" ? "#001883" : "#444"
                       }}
                     >
                       ↔️ Move (G)
@@ -282,7 +283,7 @@ function App() {
                       onClick={() => handleModeChange("rotate")}
                       style={{
                         ...transformButtonStyle,
-                        background: transformMode === "rotate" ? "#667eea" : "#444"
+                        background: transformMode === "rotate" ? "#001883" : "#444"
                       }}
                     >
                       🔄 Rotate (R)
@@ -291,7 +292,7 @@ function App() {
                       onClick={() => handleModeChange("scale")}
                       style={{
                         ...transformButtonStyle,
-                        background: transformMode === "scale" ? "#667eea" : "#444"
+                        background: transformMode === "scale" ? "#001883" : "#444"
                       }}
                     >
                       ⇔ Scale (S)
@@ -304,7 +305,7 @@ function App() {
                   onClick={handleDeleteSelected}
                   style={{
                     padding: "12px",
-                    background: "#dc3545",
+                    background: "#68000a",
                     color: "white",
                     border: "none",
                     borderRadius: "6px",
@@ -315,7 +316,6 @@ function App() {
                     marginTop: "10px"
                   }}
                   onMouseEnter={(e) => e.target.style.background = "#c82333"}
-                  onMouseLeave={(e) => e.target.style.background = "#dc3545"}
                 >
                   🗑️ Delete Object
                 </button>
@@ -347,7 +347,7 @@ function App() {
 const assetButtonStyle = {
   padding: "12px 15px",
   cursor: "pointer",
-  background: "linear-gradient(135deg, #667eea 0%, #764ba2 100%)",
+  background: "#2d326f",
   color: "white",
   border: "none",
   borderRadius: "6px",
