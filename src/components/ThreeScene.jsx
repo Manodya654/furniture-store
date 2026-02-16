@@ -6,7 +6,7 @@ import { GLTFLoader } from "three/examples/jsm/loaders/GLTFLoader";
 
 const ThreeScene = ({ onSelect }) => {
   const mountRef = useRef(null);
-  const furnitureList = useRef([]);
+  const furnitureList = useRef([]); 
 
   useEffect(() => {
     const container = mountRef.current;
@@ -16,71 +16,73 @@ const ThreeScene = ({ onSelect }) => {
     scene.background = new THREE.Color(0xf0f0f0);
 
     const camera = new THREE.PerspectiveCamera(75, container.clientWidth / container.clientHeight, 0.1, 1000);
-    camera.position.set(12, 12, 12);
+    camera.position.set(15, 15, 15);
 
     const renderer = new THREE.WebGLRenderer({ antialias: true });
     renderer.setSize(container.clientWidth, container.clientHeight);
     renderer.shadowMap.enabled = true;
-    renderer.shadowMap.type = THREE.PCFSoftShadowMap; 
     container.appendChild(renderer.domElement);
 
     const orbit = new OrbitControls(camera, renderer.domElement);
     orbit.enableDamping = true;
 
+    // --- Transform Controls (MOVEMENT GIZMO) ---
     const transform = new TransformControls(camera, renderer.domElement);
-    scene.add(transform);
-    transform.addEventListener("dragging-changed", (e) => (orbit.enabled = !e.value));
+    
+    // THE FIX: Add the gizmo safely to avoid the "Blank Screen" crash
+    const gizmo = transform.getHelper ? transform.getHelper() : transform;
+    scene.add(gizmo);
 
-    // --- Lights for that "Shaded" look ---
-    scene.add(new THREE.AmbientLight(0xffffff, 0.5));
-    const mainLight = new THREE.DirectionalLight(0xffffff, 1);
-    mainLight.position.set(10, 20, 10);
-    mainLight.castShadow = true;
-    // Improve shadow quality
-    mainLight.shadow.mapSize.width = 1024;
-    mainLight.shadow.mapSize.height = 1024;
-    scene.add(mainLight);
+    transform.addEventListener("dragging-changed", (e) => {
+      orbit.enabled = !e.value;
+    });
 
-    // --- The Studio Box ---
-    const roomSize = 25;
-    const roomGeo = new THREE.BoxGeometry(roomSize, 12, roomSize);
-    const roomMat = new THREE.MeshStandardMaterial({ color: 0xffffff, side: THREE.BackSide });
-    const room = new THREE.Mesh(roomGeo, roomMat);
-    room.position.y = 5.95; // Lifted so the "floor" of the box is at y=0
+    // --- Lighting ---
+    scene.add(new THREE.AmbientLight(0xffffff, 0.6));
+    const light = new THREE.DirectionalLight(0xffffff, 1);
+    light.position.set(10, 20, 10);
+    light.castShadow = true;
+    scene.add(light);
+
+    // --- Studio Box ---
+    const room = new THREE.Mesh(
+      new THREE.BoxGeometry(30, 15, 30),
+      new THREE.MeshStandardMaterial({ color: 0xdddddd, side: THREE.BackSide })
+    );
+    room.position.y = 7.4; 
     room.receiveShadow = true;
     scene.add(room);
 
     const loader = new GLTFLoader();
 
-    // EXPOSE METHODS TO WINDOW
+    // --- Global Logic ---
     window.addAsset = (name) => {
       loader.load(`/models/${name}.glb`, (gltf) => {
         const model = gltf.scene;
         model.name = name;
+
+        const box = new THREE.Box3().setFromObject(model);
+        const size = box.getSize(new THREE.Vector3());
+
+        const targetHeight = 8; // Increase this (e.g., 8, 10, or 12) to make furniture bigger
+        model.scale.setScalar(targetHeight / size.y);
         
         model.traverse(n => {
           if (n.isMesh) {
             n.castShadow = true;
             n.receiveShadow = true;
-            // Ensure material is unique so we can change colors individually
             n.material = n.material.clone();
           }
         });
 
-        const box = new THREE.Box3().setFromObject(model);
-        const size = box.getSize(new THREE.Vector3());
+        // Wrapper to fix "Can't Move" issues with odd GLB origins
+        const wrapper = new THREE.Group();
+        wrapper.add(model);
+        scene.add(wrapper);
         
-        // Auto-scale to a visible size
-        const targetHeight = 4; 
-        model.scale.setScalar(targetHeight / size.y);
-        
-        // Position on the floor
-        model.position.set(0, 0, 0);
-        
-        scene.add(model);
-        furnitureList.current.push(model);
-        transform.attach(model);
-        if(onSelect) onSelect({ name, id: model.uuid });
+        furnitureList.current.push(wrapper);
+        transform.attach(wrapper);
+        if(onSelect) onSelect({ name, id: wrapper.uuid });
       });
     };
 
@@ -103,7 +105,7 @@ const ThreeScene = ({ onSelect }) => {
       }
     };
 
-    // --- Interaction ---
+    // --- Selection ---
     const raycaster = new THREE.Raycaster();
     const mouse = new THREE.Vector2();
 
@@ -116,10 +118,12 @@ const ThreeScene = ({ onSelect }) => {
       const intersects = raycaster.intersectObjects(furnitureList.current, true);
 
       if (intersects.length > 0) {
-        let root = intersects[0].object;
-        while (root.parent && !furnitureList.current.includes(root)) root = root.parent;
-        transform.attach(root);
-        if(onSelect) onSelect({ name: root.name, id: root.uuid });
+        let target = intersects[0].object;
+        while (target.parent && !furnitureList.current.includes(target)) {
+          target = target.parent;
+        }
+        transform.attach(target);
+        if(onSelect) onSelect({ name: target.children[0].name, id: target.uuid });
       } else if (!transform.dragging) {
         transform.detach();
         if(onSelect) onSelect(null);
