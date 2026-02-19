@@ -2,8 +2,13 @@ import { useState } from "react";
 import ThreeScene from "./components/ThreeScene";
 import LeftSidebar from "./components/LeftSidebar";
 import RightSidebar from "./components/RightSidebar";
+import LoginPage from "./pages/LoginPage";
+import HomePage from "./pages/HomePage";
+import GalleryPage from "./pages/GalleryPage";
+
 
 function App() {
+  const [currentPage, setCurrentPage] = useState('login');
   const [selected, setSelected] = useState(null);
   const [roomDimensions, setRoomDimensions] = useState({
     width: 30,
@@ -11,6 +16,10 @@ function App() {
     depth: 30,
     color: '#dddddd'
   });
+
+  if (currentPage === 'login') return <LoginPage onLogin={() => setCurrentPage('home')} />;
+  if (currentPage === 'home') return <HomePage onStartDesign={() => setCurrentPage('gallery')} onLogout={() => setCurrentPage('login')} />;
+  if (currentPage === 'gallery') return <GalleryPage onBack={() => setCurrentPage('home')} onSelectModel={() => setCurrentPage('designer')} />;
 
   return (
     <div style={{ 
