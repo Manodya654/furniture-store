@@ -1,7 +1,7 @@
 import React from 'react';
 
 const HomePage = ({ onStartDesign, onLogout }) => {
-  // ඔබේ repo එකේ /public/models folder එකේ ඇති models වලට අදාළ දත්ත
+  
   const furnitureAssets = [
     { name: 'Luxury Sofa', icon: '🛋️', info: 'Living Room Sectional', id: 'sofa' },
     { name: 'King Size Bed', icon: '🛏️', info: 'Master Bedroom Suite', id: 'bed' },
@@ -57,7 +57,7 @@ const HomePage = ({ onStartDesign, onLogout }) => {
           <div className="absolute right-0 top-0 text-[200px] opacity-5 -rotate-12 translate-x-1/4 translate-y-1/4 group-hover:rotate-0 transition-transform duration-700">🏠</div>
         </div>
 
-        {/* Furniture Asset Grid - Repo Connection */}
+        {/* Furniture Asset Grid */}
         <div className="space-y-8">
           <div className="flex justify-between items-end">
             <div>
