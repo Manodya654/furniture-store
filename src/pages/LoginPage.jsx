@@ -7,7 +7,7 @@ const LoginPage = ({ onLogin }) => {
     e.preventDefault();
     setLoading(true);
     
-    // HCI Feedback: පරිශීලකයාට පද්ධතිය ක්‍රියාත්මක වන බවට සහතිකයක් ලබා දීම
+    
     setTimeout(() => {
       setLoading(false);
       onLogin();
