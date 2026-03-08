@@ -1,11 +1,15 @@
 import { useEffect, useRef } from "react";
 import * as THREE from "three";
+import { OrbitControls } from "three/examples/jsm/controls/OrbitControls";
+import { TransformControls } from "three/examples/jsm/controls/TransformControls";
 
 const ThreeScene = ({ onSelect, selected, roomDimensions, furniture, onUpdateFurniture }) => {
   const mountRef = useRef(null);
   const sceneRef = useRef(null);
   const cameraRef = useRef(null);
   const rendererRef = useRef(null);
+  const orbitControlsRef = useRef(null);
+  const transformControlsRef = useRef(null);
   const furnitureObjects = useRef({});
   const roomRef = useRef(null);
   const floorRef = useRef(null);
@@ -97,6 +101,26 @@ const ThreeScene = ({ onSelect, selected, roomDimensions, furniture, onUpdateFur
           group.add(leg);
         }
         return group;
+      },
+      lamp: () => {
+        const group = new THREE.Group();
+        const base = new THREE.Mesh(
+          new THREE.CylinderGeometry(0.15, 0.15, 0.1, 16),
+          new THREE.MeshStandardMaterial()
+        );
+        base.position.y = 0.05;
+        const pole = new THREE.Mesh(
+          new THREE.CylinderGeometry(0.02, 0.02, 0.8, 8),
+          new THREE.MeshStandardMaterial()
+        );
+        pole.position.y = 0.45;
+        const shade = new THREE.Mesh(
+          new THREE.ConeGeometry(0.2, 0.3, 16),
+          new THREE.MeshStandardMaterial()
+        );
+        shade.position.y = 0.95;
+        group.add(base, pole, shade);
+        return group;
       }
     };
     
@@ -164,43 +188,103 @@ const ThreeScene = ({ onSelect, selected, roomDimensions, furniture, onUpdateFur
     const container = mountRef.current;
     if (!container) return;
 
+    // Scene setup
     const scene = new THREE.Scene();
     sceneRef.current = scene;
     scene.background = new THREE.Color(0x87ceeb);
 
+    // Camera setup - STATIC POSITION, NO AUTO-ROTATION
     const camera = new THREE.PerspectiveCamera(
       60,
       container.clientWidth / container.clientHeight,
       0.1,
       1000
     );
-    camera.position.set(
-      roomDimensions.width * 0.8,
-      roomDimensions.height * 0.8,
-      roomDimensions.depth * 0.8
-    );
+    camera.position.set(8, 6, 8);
     camera.lookAt(0, 0, 0);
     cameraRef.current = camera;
 
+    // Renderer setup
     const renderer = new THREE.WebGLRenderer({ antialias: true });
     renderer.setSize(container.clientWidth, container.clientHeight);
     renderer.shadowMap.enabled = true;
+    renderer.shadowMap.type = THREE.PCFSoftShadowMap;
     container.appendChild(renderer.domElement);
     rendererRef.current = renderer;
 
+    // OrbitControls - USER CONTROLS THE CAMERA
+    const orbitControls = new OrbitControls(camera, renderer.domElement);
+    orbitControls.enableDamping = true;
+    orbitControls.dampingFactor = 0.05;
+    orbitControls.minDistance = 3;
+    orbitControls.maxDistance = 50;
+    orbitControls.maxPolarAngle = Math.PI / 2 - 0.1;
+    orbitControls.target.set(0, 1, 0);
+    orbitControls.update();
+    orbitControlsRef.current = orbitControls;
+
+    // TransformControls - FOR MOVING FURNITURE
+    const transformControls = new TransformControls(camera, renderer.domElement);
+    scene.add(transformControls);
+    transformControlsRef.current = transformControls;
+
+    // Disable orbit when using transform
+    transformControls.addEventListener('dragging-changed', (event) => {
+      orbitControls.enabled = !event.value;
+    });
+
+    // Update furniture when transforming
+    transformControls.addEventListener('objectChange', () => {
+      if (transformControls.object && transformControls.object.userData.furnitureId) {
+        const id = transformControls.object.userData.furnitureId;
+        const pos = transformControls.object.position;
+        const rot = transformControls.object.rotation;
+        const scl = transformControls.object.scale;
+        
+        onUpdateFurniture(id, {
+          position: { x: pos.x, y: pos.y, z: pos.z },
+          rotation: (rot.y * 180 / Math.PI) % 360,
+          scale: scl.x
+        });
+      }
+    });
+
+    // Keyboard shortcuts
+    const handleKeyDown = (event) => {
+      if (event.key === 'g' || event.key === 'G') {
+        transformControls.setMode('translate');
+      } else if (event.key === 'r' || event.key === 'R') {
+        transformControls.setMode('rotate');
+      } else if (event.key === 's' || event.key === 'S') {
+        transformControls.setMode('scale');
+      } else if (event.key === 'Delete' || event.key === 'Backspace') {
+        if (transformControls.object && transformControls.object.userData.furnitureId) {
+          const id = transformControls.object.userData.furnitureId;
+          onUpdateFurniture(id, null);
+          transformControls.detach();
+        }
+      }
+    };
+    window.addEventListener('keydown', handleKeyDown);
+
     // Lighting
     scene.add(new THREE.AmbientLight(0xffffff, 0.6));
-    const light = new THREE.DirectionalLight(0xffffff, 0.8);
-    light.position.set(10, 20, 10);
-    light.castShadow = true;
-    light.shadow.camera.left = -50;
-    light.shadow.camera.right = 50;
-    light.shadow.camera.top = 50;
-    light.shadow.camera.bottom = -50;
-    scene.add(light);
+    const dirLight = new THREE.DirectionalLight(0xffffff, 0.8);
+    dirLight.position.set(10, 20, 10);
+    dirLight.castShadow = true;
+    dirLight.shadow.camera.left = -20;
+    dirLight.shadow.camera.right = 20;
+    dirLight.shadow.camera.top = 20;
+    dirLight.shadow.camera.bottom = -20;
+    dirLight.shadow.mapSize.width = 2048;
+    dirLight.shadow.mapSize.height = 2048;
+    scene.add(dirLight);
 
     // Floor
-    const floorTexture = createFloorTexture(roomDimensions.floorStyle, roomDimensions.floorColor);
+    const floorTexture = createFloorTexture(
+      roomDimensions.floorStyle || 'tiles',
+      roomDimensions.floorColor || '#d4b896'
+    );
     const floor = new THREE.Mesh(
       new THREE.PlaneGeometry(roomDimensions.width, roomDimensions.depth),
       new THREE.MeshStandardMaterial({ map: floorTexture })
@@ -212,11 +296,10 @@ const ThreeScene = ({ onSelect, selected, roomDimensions, furniture, onUpdateFur
 
     // Walls
     const wallMaterial = new THREE.MeshStandardMaterial({
-      color: roomDimensions.wallColor,
+      color: roomDimensions.wallColor || '#e8e8e8',
       side: THREE.DoubleSide
     });
 
-    // Back wall
     const backWall = new THREE.Mesh(
       new THREE.PlaneGeometry(roomDimensions.width, roomDimensions.height),
       wallMaterial
@@ -225,7 +308,6 @@ const ThreeScene = ({ onSelect, selected, roomDimensions, furniture, onUpdateFur
     backWall.position.y = roomDimensions.height / 2;
     scene.add(backWall);
 
-    // Left wall
     const leftWall = new THREE.Mesh(
       new THREE.PlaneGeometry(roomDimensions.depth, roomDimensions.height),
       wallMaterial
@@ -235,7 +317,6 @@ const ThreeScene = ({ onSelect, selected, roomDimensions, furniture, onUpdateFur
     leftWall.rotation.y = Math.PI / 2;
     scene.add(leftWall);
 
-    // Right wall
     const rightWall = new THREE.Mesh(
       new THREE.PlaneGeometry(roomDimensions.depth, roomDimensions.height),
       wallMaterial
@@ -245,7 +326,6 @@ const ThreeScene = ({ onSelect, selected, roomDimensions, furniture, onUpdateFur
     rightWall.rotation.y = -Math.PI / 2;
     scene.add(rightWall);
 
-    // Ceiling
     const ceiling = new THREE.Mesh(
       new THREE.PlaneGeometry(roomDimensions.width, roomDimensions.depth),
       new THREE.MeshStandardMaterial({ color: 0xf5f5f5, side: THREE.DoubleSide })
@@ -277,24 +357,20 @@ const ThreeScene = ({ onSelect, selected, roomDimensions, furniture, onUpdateFur
         if (obj.userData.furnitureId) {
           const item = furniture.find(f => f.id === obj.userData.furnitureId);
           onSelect(item);
+          transformControls.attach(obj);
         }
       } else {
         onSelect(null);
+        transformControls.detach();
       }
     };
 
     renderer.domElement.addEventListener('click', onMouseClick);
 
-    // Animation loop
-    let angle = 0;
+    // Animation loop - NO AUTO-ROTATION, ONLY UPDATE CONTROLS
     const animate = () => {
       requestAnimationFrame(animate);
-      
-      angle += 0.002;
-      camera.position.x = Math.cos(angle) * roomDimensions.width * 0.8;
-      camera.position.z = Math.sin(angle) * roomDimensions.depth * 0.8;
-      camera.lookAt(0, roomDimensions.height / 3, 0);
-      
+      orbitControls.update(); // Only update orbit controls
       renderer.render(scene, camera);
     };
     animate();
@@ -308,6 +384,7 @@ const ThreeScene = ({ onSelect, selected, roomDimensions, furniture, onUpdateFur
 
     return () => {
       window.removeEventListener('resize', handleResize);
+      window.removeEventListener('keydown', handleKeyDown);
       renderer.domElement.removeEventListener('click', onMouseClick);
       renderer.dispose();
       if (container.contains(renderer.domElement)) {
@@ -318,7 +395,7 @@ const ThreeScene = ({ onSelect, selected, roomDimensions, furniture, onUpdateFur
 
   // Update furniture
   useEffect(() => {
-    if (!sceneRef.current) return;
+    if (!sceneRef.current || !furniture) return;
 
     // Remove old furniture
     Object.values(furnitureObjects.current).forEach(obj => {
@@ -350,6 +427,8 @@ const ThreeScene = ({ onSelect, selected, roomDimensions, furniture, onUpdateFur
 
   // Update selection highlight
   useEffect(() => {
+    if (!selected || !furnitureObjects.current) return;
+    
     Object.entries(furnitureObjects.current).forEach(([id, obj]) => {
       const isSelected = selected?.id === id;
       obj.traverse(child => {
@@ -359,6 +438,11 @@ const ThreeScene = ({ onSelect, selected, roomDimensions, furniture, onUpdateFur
         }
       });
     });
+
+    // Attach transform controls to selected object
+    if (selected && furnitureObjects.current[selected.id] && transformControlsRef.current) {
+      transformControlsRef.current.attach(furnitureObjects.current[selected.id]);
+    }
   }, [selected]);
 
   // Update room
@@ -370,7 +454,10 @@ const ThreeScene = ({ onSelect, selected, roomDimensions, furniture, onUpdateFur
 
     // Update floor
     scene.remove(floor);
-    const floorTexture = createFloorTexture(roomDimensions.floorStyle, roomDimensions.floorColor);
+    const floorTexture = createFloorTexture(
+      roomDimensions.floorStyle || 'tiles',
+      roomDimensions.floorColor || '#d4b896'
+    );
     const newFloor = new THREE.Mesh(
       new THREE.PlaneGeometry(roomDimensions.width, roomDimensions.depth),
       new THREE.MeshStandardMaterial({ map: floorTexture })
@@ -383,7 +470,7 @@ const ThreeScene = ({ onSelect, selected, roomDimensions, furniture, onUpdateFur
 
     // Update walls
     const wallMaterial = new THREE.MeshStandardMaterial({
-      color: roomDimensions.wallColor,
+      color: roomDimensions.wallColor || '#e8e8e8',
       side: THREE.DoubleSide
     });
 
@@ -405,14 +492,6 @@ const ThreeScene = ({ onSelect, selected, roomDimensions, furniture, onUpdateFur
 
     ceiling.geometry = new THREE.PlaneGeometry(roomDimensions.width, roomDimensions.depth);
     ceiling.position.y = roomDimensions.height;
-
-    // Update camera position
-    if (cameraRef.current) {
-      const angle = Math.atan2(cameraRef.current.position.z, cameraRef.current.position.x);
-      cameraRef.current.position.x = Math.cos(angle) * roomDimensions.width * 0.8;
-      cameraRef.current.position.y = roomDimensions.height * 0.8;
-      cameraRef.current.position.z = Math.sin(angle) * roomDimensions.depth * 0.8;
-    }
   }, [roomDimensions]);
 
   return (
@@ -421,17 +500,26 @@ const ThreeScene = ({ onSelect, selected, roomDimensions, furniture, onUpdateFur
         position: 'absolute',
         top: '20px',
         right: '20px',
-        background: 'rgba(0,0,0,0.8)',
-        padding: '15px',
-        borderRadius: '8px',
+        background: 'rgba(0,0,0,0.85)',
+        padding: '18px 22px',
+        borderRadius: '12px',
         fontSize: '12px',
         color: '#aaa',
-        zIndex: 10
+        zIndex: 10,
+        border: '1px solid #333',
+        backdropFilter: 'blur(10px)',
+        boxShadow: '0 4px 20px rgba(0,0,0,0.5)'
       }}>
-        <div style={{fontWeight: 'bold', color: '#4a9eff', marginBottom: '8px'}}>3D View</div>
-        <div>• Auto-rotating camera</div>
-        <div>• Click to select furniture</div>
-        <div>• Switch to 2D for editing</div>
+        <div style={{fontWeight: 'bold', color: '#4a9eff', marginBottom: '12px', fontSize: '14px'}}>
+          🎮 3D View Controls
+        </div>
+        <div style={{marginBottom: '5px'}}>• <strong>Left Drag:</strong> Rotate view</div>
+        <div style={{marginBottom: '5px'}}>• <strong>Right Drag:</strong> Pan view</div>
+        <div style={{marginBottom: '5px'}}>• <strong>Scroll:</strong> Zoom</div>
+        <div style={{marginBottom: '5px'}}>• <strong>Click Object:</strong> Select</div>
+        <div style={{marginTop: '12px', paddingTop: '12px', borderTop: '1px solid #444', fontSize: '11px'}}>
+          <strong>Keyboard:</strong> G (move) • R (rotate) • S (scale)
+        </div>
       </div>
     </div>
   );

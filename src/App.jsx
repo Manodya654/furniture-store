@@ -2,16 +2,10 @@ import { useState } from "react";
 import ThreeScene from "./components/ThreeScene";
 import TwoD_Scene from "./components/TwoD_Scene";
 import LeftSidebar from "./components/LeftSidebar";
-import RightSidebar from "./components/RightSidebar";
-import LoginPage from "./pages/LoginPage";
-import HomePage from "./pages/HomePage";
-import GalleryPage from "./pages/GalleryPage";
-
 import RightSidebar from "./components/RightSideBar";
 import DesignManager from "./components/DesignManager";
 
 function App() {
-  const [currentPage, setCurrentPage] = useState('login');
   const [viewMode, setViewMode] = useState('3d');
   const [selected, setSelected] = useState(null);
   const [furniture, setFurniture] = useState([]);
@@ -19,15 +13,13 @@ function App() {
   const [currentDesignName, setCurrentDesignName] = useState('Untitled Design');
   
   const [roomDimensions, setRoomDimensions] = useState({
-    width: 30,
-    height: 15,
-    depth: 30,
-    color: '#dddddd'
+    width: 6,
+    height: 3,
+    depth: 5,
+    wallColor: '#e8e8e8',
+    floorStyle: 'tiles',
+    floorColor: '#d4b896'
   });
-
-  if (currentPage === 'login') return <LoginPage onLogin={() => setCurrentPage('home')} />;
-  if (currentPage === 'home') return <HomePage onStartDesign={() => setCurrentPage('gallery')} onLogout={() => setCurrentPage('login')} />;
-  if (currentPage === 'gallery') return <GalleryPage onBack={() => setCurrentPage('home')} onSelectModel={() => setCurrentPage('designer')} />;
 
   const handleAddFurniture = (item) => {
     console.log('Adding furniture:', item);
@@ -78,12 +70,12 @@ function App() {
     setSelected(null);
     setCurrentDesignName('Untitled Design');
     setRoomDimensions({
-      width: 30,
-      height: 15,
-      depth: 30,
-      wallColor: '#dddddd',
+      width: 6,
+      height: 3,
+      depth: 5,
+      wallColor: '#e8e8e8',
       floorStyle: 'tiles',
-      floorColor: '#8B7355'
+      floorColor: '#d4b896'
     });
   };
 
