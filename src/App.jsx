@@ -1,16 +1,83 @@
 import { useState } from "react";
 import ThreeScene from "./components/ThreeScene";
+import TwoD_Scene from "./components/TwoD_Scene";
 import LeftSidebar from "./components/LeftSidebar";
-import RightSidebar from "./components/RightSidebar";
+import RightSidebar from "./components/RightSideBar";
+import DesignManager from "./components/DesignManager";
 
 function App() {
+  const [viewMode, setViewMode] = useState('3d');
   const [selected, setSelected] = useState(null);
+  const [furniture, setFurniture] = useState([]);
+  const [savedDesigns, setSavedDesigns] = useState([]);
+  const [currentDesignName, setCurrentDesignName] = useState('Untitled Design');
+  
   const [roomDimensions, setRoomDimensions] = useState({
     width: 30,
     height: 15,
     depth: 30,
-    color: '#dddddd'
+    wallColor: '#dddddd',
+    floorStyle: 'tiles',
+    floorColor: '#8B7355'
   });
+
+  const handleAddFurniture = (item) => {
+    console.log('Adding furniture:', item);
+    setFurniture(prev => [...prev, item]);
+  };
+
+  const handleUpdateFurniture = (id, updates) => {
+    console.log('Updating furniture:', id, updates);
+    setFurniture(prev => prev.map(item => 
+      item.id === id ? { ...item, ...updates } : item
+    ));
+  };
+
+  const handleDeleteFurniture = (id) => {
+    console.log('Deleting furniture:', id);
+    setFurniture(prev => prev.filter(item => item.id !== id));
+    if (selected?.id === id) {
+      setSelected(null);
+    }
+  };
+
+  const handleSaveDesign = (name) => {
+    const design = {
+      id: Date.now().toString(),
+      name: name || currentDesignName,
+      timestamp: new Date().toISOString(),
+      roomDimensions: { ...roomDimensions },
+      furniture: furniture.map(item => ({ ...item }))
+    };
+    setSavedDesigns(prev => [...prev, design]);
+    setCurrentDesignName(name || currentDesignName);
+    return design;
+  };
+
+  const handleLoadDesign = (design) => {
+    setRoomDimensions({ ...design.roomDimensions });
+    setFurniture([...design.furniture]);
+    setCurrentDesignName(design.name);
+    setSelected(null);
+  };
+
+  const handleDeleteDesign = (id) => {
+    setSavedDesigns(prev => prev.filter(d => d.id !== id));
+  };
+
+  const handleNewDesign = () => {
+    setFurniture([]);
+    setSelected(null);
+    setCurrentDesignName('Untitled Design');
+    setRoomDimensions({
+      width: 30,
+      height: 15,
+      depth: 30,
+      wallColor: '#dddddd',
+      floorStyle: 'tiles',
+      floorColor: '#8B7355'
+    });
+  };
 
   return (
     <div style={{ 
@@ -20,6 +87,7 @@ function App() {
       width: "100vw", 
       overflow: "hidden", 
       color: 'white',
+      background: '#0a0a0a',
       fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif'
     }}>
       <header style={{
@@ -27,6 +95,7 @@ function App() {
         background: 'linear-gradient(135deg, #0a0a0a 0%, #1a1a1a 100%)',
         display: 'flex', 
         alignItems: 'center', 
+        justifyContent: 'space-between',
         padding: '0 30px', 
         borderBottom: '1px solid #333',
         boxShadow: '0 2px 10px rgba(0,0,0,0.5)'
@@ -54,6 +123,65 @@ function App() {
           }}>
             v2.0
           </span>
+          <span style={{
+            fontSize: '14px',
+            color: '#888',
+            marginLeft: '20px'
+          }}>
+            {currentDesignName}
+          </span>
+        </div>
+
+        <div style={{display: 'flex', gap: '10px', alignItems: 'center'}}>
+          <DesignManager
+            onSave={handleSaveDesign}
+            onLoad={handleLoadDesign}
+            onDelete={handleDeleteDesign}
+            onNew={handleNewDesign}
+            savedDesigns={savedDesigns}
+            currentName={currentDesignName}
+          />
+          
+          <div style={{
+            background: '#222',
+            borderRadius: '8px',
+            padding: '4px',
+            display: 'flex',
+            gap: '4px'
+          }}>
+            <button
+              onClick={() => setViewMode('2d')}
+              style={{
+                padding: '8px 16px',
+                background: viewMode === '2d' ? '#4a9eff' : 'transparent',
+                color: 'white',
+                border: 'none',
+                borderRadius: '6px',
+                cursor: 'pointer',
+                fontSize: '13px',
+                fontWeight: '600',
+                transition: 'all 0.2s'
+              }}
+            >
+              2D View
+            </button>
+            <button
+              onClick={() => setViewMode('3d')}
+              style={{
+                padding: '8px 16px',
+                background: viewMode === '3d' ? '#4a9eff' : 'transparent',
+                color: 'white',
+                border: 'none',
+                borderRadius: '6px',
+                cursor: 'pointer',
+                fontSize: '13px',
+                fontWeight: '600',
+                transition: 'all 0.2s'
+              }}
+            >
+              3D View
+            </button>
+          </div>
         </div>
       </header>
       
@@ -61,14 +189,32 @@ function App() {
         <LeftSidebar 
           roomDimensions={roomDimensions} 
           onRoomChange={setRoomDimensions}
+          onAddFurniture={handleAddFurniture}
         />
         <main style={{ flex: 1, position: "relative", background: '#0a0a0a' }}>
-          <ThreeScene 
-            onSelect={setSelected} 
-            roomDimensions={roomDimensions}
-          />
+          {viewMode === '3d' ? (
+            <ThreeScene 
+              onSelect={setSelected}
+              selected={selected}
+              roomDimensions={roomDimensions}
+              furniture={furniture}
+              onUpdateFurniture={handleUpdateFurniture}
+            />
+          ) : (
+            <TwoD_Scene
+              onSelect={setSelected}
+              selected={selected}
+              roomDimensions={roomDimensions}
+              furniture={furniture}
+              onUpdateFurniture={handleUpdateFurniture}
+            />
+          )}
         </main>
-        <RightSidebar selected={selected} />
+        <RightSidebar 
+          selected={selected}
+          onUpdateFurniture={handleUpdateFurniture}
+          onDeleteFurniture={handleDeleteFurniture}
+        />
       </div>
     </div>
   );

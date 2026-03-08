@@ -1,4 +1,39 @@
-const RightSidebar = ({ selected }) => {
+const RightSidebar = ({ selected, onUpdateFurniture, onDeleteFurniture }) => {
+  const handlePositionChange = (axis, value) => {
+    if (selected) {
+      const newValue = parseFloat(value);
+      if (!isNaN(newValue)) {
+        onUpdateFurniture(selected.id, {
+          position: { ...selected.position, [axis]: newValue }
+        });
+      }
+    }
+  };
+
+  const handleRotationChange = (value) => {
+    if (selected) {
+      const newValue = parseFloat(value);
+      if (!isNaN(newValue)) {
+        onUpdateFurniture(selected.id, { rotation: newValue });
+      }
+    }
+  };
+
+  const handleScaleChange = (value) => {
+    if (selected) {
+      const newValue = parseFloat(value);
+      if (!isNaN(newValue) && newValue > 0) {
+        onUpdateFurniture(selected.id, { scale: newValue });
+      }
+    }
+  };
+
+  const handleColorChange = (color) => {
+    if (selected) {
+      onUpdateFurniture(selected.id, { color });
+    }
+  };
+
   return (
     <aside style={sideStyle}>
       <div style={headerStyle}>
@@ -14,14 +49,93 @@ const RightSidebar = ({ selected }) => {
             <div style={labelStyle}>Selected Object</div>
             <div style={objectNameStyle}>
               <span style={objectIconStyle}>
-                {selected.name === 'chair' && '🪑'}
-                {selected.name === 'table' && '🪵'}
-                {selected.name === 'sofa' && '🛋️'}
+                {selected.type === 'chair' && '🪑'}
+                {selected.type === 'table' && '🪵'}
+                {selected.type === 'sofa' && '🛋️'}
+                {selected.type === 'bed' && '🛏️'}
+                {selected.type === 'desk' && '🗄️'}
               </span>
-              {selected.name}
+              {selected.type}
             </div>
-            <div style={idStyle}>ID: {selected.id.substring(0, 8)}...</div>
+            <div style={idStyle}>ID: {selected.id.substring(selected.id.length - 8)}</div>
           </div>
+
+          {/* Position Controls */}
+          <div style={controlSectionStyle}>
+            <div style={controlHeaderStyle}>
+              <span style={controlIconStyle}>📍</span>
+              <span>Position</span>
+            </div>
+            <div style={inputGroupStyle}>
+              <div style={inputItemStyle}>
+                <label style={smallLabelStyle}>X</label>
+                <input
+                  type="number"
+                  step="0.1"
+                  value={selected.position.x.toFixed(1)}
+                  onChange={(e) => handlePositionChange('x', e.target.value)}
+                  style={numberInputStyle}
+                />
+              </div>
+              <div style={inputItemStyle}>
+                <label style={smallLabelStyle}>Y</label>
+                <input
+                  type="number"
+                  step="0.1"
+                  value={selected.position.y.toFixed(1)}
+                  onChange={(e) => handlePositionChange('y', e.target.value)}
+                  style={numberInputStyle}
+                />
+              </div>
+              <div style={inputItemStyle}>
+                <label style={smallLabelStyle}>Z</label>
+                <input
+                  type="number"
+                  step="0.1"
+                  value={selected.position.z.toFixed(1)}
+                  onChange={(e) => handlePositionChange('z', e.target.value)}
+                  style={numberInputStyle}
+                />
+              </div>
+            </div>
+          </div>
+
+          {/* Rotation Control */}
+          <div style={controlSectionStyle}>
+            <div style={controlHeaderStyle}>
+              <span style={controlIconStyle}>🔄</span>
+              <span>Rotation</span>
+            </div>
+            <input
+              type="range"
+              min="0"
+              max="360"
+              value={selected.rotation || 0}
+              onChange={(e) => handleRotationChange(e.target.value)}
+              style={rangeInputStyle}
+            />
+            <div style={valueDisplayStyle}>{(selected.rotation || 0).toFixed(0)}°</div>
+          </div>
+
+          {/* Scale Control */}
+          <div style={controlSectionStyle}>
+            <div style={controlHeaderStyle}>
+              <span style={controlIconStyle}>📏</span>
+              <span>Scale</span>
+            </div>
+            <input
+              type="range"
+              min="0.5"
+              max="2"
+              step="0.1"
+              value={selected.scale || 1}
+              onChange={(e) => handleScaleChange(e.target.value)}
+              style={rangeInputStyle}
+            />
+            <div style={valueDisplayStyle}>{((selected.scale || 1) * 100).toFixed(0)}%</div>
+          </div>
+
+          <div style={dividerStyle}></div>
 
           {/* Color Control */}
           <div style={controlSectionStyle}>
@@ -31,7 +145,8 @@ const RightSidebar = ({ selected }) => {
             </div>
             <input 
               type="color" 
-              onChange={(e) => window.changeColor(e.target.value)} 
+              value={selected.color || '#8B7355'}
+              onChange={(e) => handleColorChange(e.target.value)} 
               style={colorInputStyle}
             />
             <div style={hintStyle}>Click to change furniture color</div>
@@ -39,23 +154,10 @@ const RightSidebar = ({ selected }) => {
 
           <div style={dividerStyle}></div>
 
-          {/* Transform Info */}
-          <div style={controlSectionStyle}>
-            <div style={controlHeaderStyle}>
-              <span style={controlIconStyle}>📐</span>
-              <span>Transform Tools</span>
-            </div>
-            <div style={toolTipStyle}>
-              <kbd style={kbdStyle}>G</kbd> Move • <kbd style={kbdStyle}>R</kbd> Rotate • <kbd style={kbdStyle}>S</kbd> Scale
-            </div>
-          </div>
-
-          <div style={dividerStyle}></div>
-
           {/* Actions */}
           <div style={actionsSectionStyle}>
             <button 
-              onClick={() => window.deleteSelected()} 
+              onClick={() => onDeleteFurniture(selected.id)} 
               style={deleteBtnStyle}
             >
               <span style={{fontSize: '18px'}}>🗑️</span>
@@ -82,7 +184,8 @@ const sideStyle = {
   borderLeft: '1px solid #333',
   display: 'flex',
   flexDirection: 'column',
-  boxShadow: '-2px 0 10px rgba(0,0,0,0.3)'
+  boxShadow: '-2px 0 10px rgba(0,0,0,0.3)',
+  overflowY: 'auto'
 };
 
 const headerStyle = {
@@ -166,6 +269,53 @@ const controlIconStyle = {
   fontSize: '16px'
 };
 
+const inputGroupStyle = {
+  display: 'flex',
+  gap: '8px'
+};
+
+const inputItemStyle = {
+  flex: 1
+};
+
+const smallLabelStyle = {
+  display: 'block',
+  fontSize: '10px',
+  color: '#888',
+  marginBottom: '4px',
+  fontWeight: '600'
+};
+
+const numberInputStyle = {
+  width: '100%',
+  padding: '8px',
+  background: '#222',
+  border: '2px solid #333',
+  borderRadius: '6px',
+  color: '#4a9eff',
+  fontSize: '13px',
+  fontWeight: '600',
+  outline: 'none'
+};
+
+const rangeInputStyle = {
+  width: '100%',
+  height: '6px',
+  background: '#333',
+  borderRadius: '3px',
+  outline: 'none',
+  cursor: 'pointer',
+  accentColor: '#4a9eff'
+};
+
+const valueDisplayStyle = {
+  marginTop: '8px',
+  fontSize: '13px',
+  color: '#4a9eff',
+  fontWeight: '600',
+  textAlign: 'center'
+};
+
 const colorInputStyle = {
   width: '100%',
   height: '60px',
@@ -187,26 +337,6 @@ const dividerStyle = {
   height: '1px',
   background: 'linear-gradient(90deg, transparent, #333, transparent)',
   margin: '20px 0'
-};
-
-const toolTipStyle = {
-  background: '#222',
-  padding: '12px',
-  borderRadius: '6px',
-  fontSize: '12px',
-  color: '#aaa',
-  border: '1px solid #333',
-  textAlign: 'center'
-};
-
-const kbdStyle = {
-  background: '#444',
-  padding: '3px 8px',
-  borderRadius: '4px',
-  fontSize: '11px',
-  fontWeight: 'bold',
-  border: '1px solid #555',
-  color: '#4a9eff'
 };
 
 const actionsSectionStyle = {
