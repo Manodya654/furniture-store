@@ -2,10 +2,16 @@ import { useState } from "react";
 import ThreeScene from "./components/ThreeScene";
 import TwoD_Scene from "./components/TwoD_Scene";
 import LeftSidebar from "./components/LeftSidebar";
+import RightSidebar from "./components/RightSidebar";
+import LoginPage from "./pages/LoginPage";
+import HomePage from "./pages/HomePage";
+import GalleryPage from "./pages/GalleryPage";
+
 import RightSidebar from "./components/RightSideBar";
 import DesignManager from "./components/DesignManager";
 
 function App() {
+  const [currentPage, setCurrentPage] = useState('login');
   const [viewMode, setViewMode] = useState('3d');
   const [selected, setSelected] = useState(null);
   const [furniture, setFurniture] = useState([]);
@@ -16,10 +22,12 @@ function App() {
     width: 30,
     height: 15,
     depth: 30,
-    wallColor: '#dddddd',
-    floorStyle: 'tiles',
-    floorColor: '#8B7355'
+    color: '#dddddd'
   });
+
+  if (currentPage === 'login') return <LoginPage onLogin={() => setCurrentPage('home')} />;
+  if (currentPage === 'home') return <HomePage onStartDesign={() => setCurrentPage('gallery')} onLogout={() => setCurrentPage('login')} />;
+  if (currentPage === 'gallery') return <GalleryPage onBack={() => setCurrentPage('home')} onSelectModel={() => setCurrentPage('designer')} />;
 
   const handleAddFurniture = (item) => {
     console.log('Adding furniture:', item);
