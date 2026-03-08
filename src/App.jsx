@@ -5,7 +5,15 @@ import LeftSidebar from "./components/LeftSidebar";
 import RightSidebar from "./components/RightSideBar";
 import DesignManager from "./components/DesignManager";
 
+import LoginPage from "./pages/LoginPage";
+import HomePage from "./pages/HomePage";
+import GalleryPage from "./pages/GalleryPage";
+
 function App() {
+  // Navigation State
+  const [currentPage, setCurrentPage] = useState('login');
+
+  // Designer Logic State 
   const [viewMode, setViewMode] = useState('3d');
   const [selected, setSelected] = useState(null);
   const [furniture, setFurniture] = useState([]);
@@ -21,24 +29,20 @@ function App() {
     floorColor: '#d4b896'
   });
 
+  // Handlers 
   const handleAddFurniture = (item) => {
-    console.log('Adding furniture:', item);
     setFurniture(prev => [...prev, item]);
   };
 
   const handleUpdateFurniture = (id, updates) => {
-    console.log('Updating furniture:', id, updates);
     setFurniture(prev => prev.map(item => 
       item.id === id ? { ...item, ...updates } : item
     ));
   };
 
   const handleDeleteFurniture = (id) => {
-    console.log('Deleting furniture:', id);
     setFurniture(prev => prev.filter(item => item.id !== id));
-    if (selected?.id === id) {
-      setSelected(null);
-    }
+    if (selected?.id === id) setSelected(null);
   };
 
   const handleSaveDesign = (name) => {
@@ -59,10 +63,7 @@ function App() {
     setFurniture([...design.furniture]);
     setCurrentDesignName(design.name);
     setSelected(null);
-  };
-
-  const handleDeleteDesign = (id) => {
-    setSavedDesigns(prev => prev.filter(d => d.id !== id));
+    setCurrentPage('designer'); // Switch to designer when a design is loaded
   };
 
   const handleNewDesign = () => {
@@ -70,15 +71,30 @@ function App() {
     setSelected(null);
     setCurrentDesignName('Untitled Design');
     setRoomDimensions({
-      width: 6,
-      height: 3,
-      depth: 5,
-      wallColor: '#e8e8e8',
-      floorStyle: 'tiles',
-      floorColor: '#d4b896'
+      width: 6, height: 3, depth: 5, wallColor: '#e8e8e8', floorStyle: 'tiles', floorColor: '#d4b896'
     });
   };
 
+  // --- ROUTING LOGIC ---
+  
+  if (currentPage === 'login') {
+    return <LoginPage onLogin={() => setCurrentPage('home')} />;
+  }
+
+  if (currentPage === 'home') {
+    return <HomePage onStartDesign={() => setCurrentPage('gallery')} onLogout={() => setCurrentPage('login')} />;
+  }
+
+  if (currentPage === 'gallery') {
+    return (
+      <GalleryPage 
+        onBack={() => setCurrentPage('home')} 
+        onSelectModel={() => setCurrentPage('designer')} 
+      />
+    );
+  }
+
+  // If page is 'designer', render the full studio 
   return (
     <div style={{ 
       display: "flex", 
@@ -101,6 +117,7 @@ function App() {
         boxShadow: '0 2px 10px rgba(0,0,0,0.5)'
       }}>
         <div style={{display: 'flex', alignItems: 'center', gap: '12px'}}>
+          <span style={{cursor: 'pointer'}} onClick={() => setCurrentPage('gallery')}>⬅️</span>
           <h2 style={{
             margin: 0, 
             fontSize: '20px', 
@@ -112,11 +129,7 @@ function App() {
           }}>
             Furniture Studio Pro
           </h2>
-          <span style={{
-            fontSize: '14px',
-            color: '#888',
-            marginLeft: '20px'
-          }}>
+          <span style={{ fontSize: '14px', color: '#888', marginLeft: '20px' }}>
             {currentDesignName}
           </span>
         </div>
@@ -131,45 +144,13 @@ function App() {
             currentName={currentDesignName}
           />
           
-          <div style={{
-            background: '#222',
-            borderRadius: '8px',
-            padding: '4px',
-            display: 'flex',
-            gap: '4px'
-          }}>
-            <button
-              onClick={() => setViewMode('2d')}
-              style={{
-                padding: '8px 16px',
-                background: viewMode === '2d' ? '#4a9eff' : 'transparent',
-                color: 'white',
-                border: 'none',
-                borderRadius: '6px',
-                cursor: 'pointer',
-                fontSize: '13px',
-                fontWeight: '600',
-                transition: 'all 0.2s'
-              }}
-            >
-              2D View
-            </button>
-            <button
-              onClick={() => setViewMode('3d')}
-              style={{
-                padding: '8px 16px',
-                background: viewMode === '3d' ? '#4a9eff' : 'transparent',
-                color: 'white',
-                border: 'none',
-                borderRadius: '6px',
-                cursor: 'pointer',
-                fontSize: '13px',
-                fontWeight: '600',
-                transition: 'all 0.2s'
-              }}
-            >
-              3D View
-            </button>
+          <div style={{ background: '#222', borderRadius: '8px', padding: '4px', display: 'flex', gap: '4px' }}>
+            <button onClick={() => setViewMode('2d')} style={{ /* styles from your version 1 */
+              padding: '8px 16px', background: viewMode === '2d' ? '#4a9eff' : 'transparent', color: 'white', border: 'none', borderRadius: '6px', cursor: 'pointer', fontSize: '13px', fontWeight: '600'
+            }}>2D View</button>
+            <button onClick={() => setViewMode('3d')} style={{ /* styles from your version 1 */
+              padding: '8px 16px', background: viewMode === '3d' ? '#4a9eff' : 'transparent', color: 'white', border: 'none', borderRadius: '6px', cursor: 'pointer', fontSize: '13px', fontWeight: '600'
+            }}>3D View</button>
           </div>
         </div>
       </header>
