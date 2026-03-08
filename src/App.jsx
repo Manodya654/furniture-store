@@ -101,7 +101,6 @@ function App() {
         boxShadow: '0 2px 10px rgba(0,0,0,0.5)'
       }}>
         <div style={{display: 'flex', alignItems: 'center', gap: '12px'}}>
-          <span style={{fontSize: '28px'}}>🏗️</span>
           <h2 style={{
             margin: 0, 
             fontSize: '20px', 
@@ -113,16 +112,6 @@ function App() {
           }}>
             Furniture Studio Pro
           </h2>
-          <span style={{
-            background: '#2a4a7c',
-            padding: '4px 10px',
-            borderRadius: '12px',
-            fontSize: '11px',
-            fontWeight: '600',
-            marginLeft: '8px'
-          }}>
-            v2.0
-          </span>
           <span style={{
             fontSize: '14px',
             color: '#888',
