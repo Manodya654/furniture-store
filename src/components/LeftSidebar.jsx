@@ -1,4 +1,24 @@
-const LeftSidebar = ({ roomDimensions, onRoomChange }) => {
+const LeftSidebar = ({ roomDimensions, onRoomChange, onAddFurniture }) => {
+  const handleDimensionChange = (field, value) => {
+    const numValue = parseFloat(value);
+    if (!isNaN(numValue) && numValue > 0) {
+      onRoomChange({ ...roomDimensions, [field]: numValue });
+    }
+  };
+
+  const handleAddAsset = (type) => {
+    const newItem = {
+      id: `${type}_${Date.now()}`,
+      type: type,
+      name: type,
+      position: { x: 0, y: 0, z: 0 },
+      rotation: 0,
+      scale: 1,
+      color: '#8B7355'
+    };
+    onAddFurniture(newItem);
+  };
+
   return (
     <aside style={sideStyle}>
       {/* Room Configuration Section */}
@@ -10,48 +30,73 @@ const LeftSidebar = ({ roomDimensions, onRoomChange }) => {
         <div style={controlGroupStyle}>
           <label style={labelStyle}>Width (m)</label>
           <input 
-            type="range" 
-            min="10" 
-            max="50" 
+            type="number" 
+            min="5" 
+            max="100" 
+            step="0.5"
             value={roomDimensions.width}
-            onChange={(e) => onRoomChange({ ...roomDimensions, width: parseFloat(e.target.value) })}
-            style={rangeStyle}
+            onChange={(e) => handleDimensionChange('width', e.target.value)}
+            style={numberInputStyle}
           />
-          <span style={valueStyle}>{roomDimensions.width}m</span>
         </div>
 
         <div style={controlGroupStyle}>
           <label style={labelStyle}>Height (m)</label>
           <input 
-            type="range" 
-            min="8" 
-            max="25" 
+            type="number" 
+            min="2.5" 
+            max="50" 
+            step="0.5"
             value={roomDimensions.height}
-            onChange={(e) => onRoomChange({ ...roomDimensions, height: parseFloat(e.target.value) })}
-            style={rangeStyle}
+            onChange={(e) => handleDimensionChange('height', e.target.value)}
+            style={numberInputStyle}
           />
-          <span style={valueStyle}>{roomDimensions.height}m</span>
         </div>
 
         <div style={controlGroupStyle}>
           <label style={labelStyle}>Depth (m)</label>
           <input 
-            type="range" 
-            min="10" 
-            max="50" 
+            type="number" 
+            min="5" 
+            max="100" 
+            step="0.5"
             value={roomDimensions.depth}
-            onChange={(e) => onRoomChange({ ...roomDimensions, depth: parseFloat(e.target.value) })}
-            style={rangeStyle}
+            onChange={(e) => handleDimensionChange('depth', e.target.value)}
+            style={numberInputStyle}
           />
-          <span style={valueStyle}>{roomDimensions.depth}m</span>
         </div>
 
         <div style={controlGroupStyle}>
           <label style={labelStyle}>Wall Color</label>
           <input 
             type="color" 
-            value={roomDimensions.color}
-            onChange={(e) => onRoomChange({ ...roomDimensions, color: e.target.value })}
+            value={roomDimensions.wallColor}
+            onChange={(e) => onRoomChange({ ...roomDimensions, wallColor: e.target.value })}
+            style={colorInputStyle}
+          />
+        </div>
+
+        <div style={controlGroupStyle}>
+          <label style={labelStyle}>Floor Style</label>
+          <select
+            value={roomDimensions.floorStyle}
+            onChange={(e) => onRoomChange({ ...roomDimensions, floorStyle: e.target.value })}
+            style={selectStyle}
+          >
+            <option value="tiles">Tiles Pattern</option>
+            <option value="wood">Wood Planks</option>
+            <option value="marble">Marble</option>
+            <option value="carpet">Carpet</option>
+            <option value="solid">Solid Color</option>
+          </select>
+        </div>
+
+        <div style={controlGroupStyle}>
+          <label style={labelStyle}>Floor Color</label>
+          <input 
+            type="color" 
+            value={roomDimensions.floorColor}
+            onChange={(e) => onRoomChange({ ...roomDimensions, floorColor: e.target.value })}
             style={colorInputStyle}
           />
         </div>
@@ -62,16 +107,22 @@ const LeftSidebar = ({ roomDimensions, onRoomChange }) => {
       {/* Assets Section */}
       <div style={sectionStyle}>
         <h3 style={headingStyle}>
-          <span style={iconStyle}>🪑</span> Add Assets
+          <span style={iconStyle}>🪑</span> Add Furniture
         </h3>
-        <button onClick={() => window.addAsset('chair')} style={assetBtnStyle}>
+        <button onClick={() => handleAddAsset('chair')} style={assetBtnStyle}>
           <span style={btnIconStyle}>🪑</span> Chair
         </button>
-        <button onClick={() => window.addAsset('table')} style={assetBtnStyle}>
+        <button onClick={() => handleAddAsset('table')} style={assetBtnStyle}>
           <span style={btnIconStyle}>🪵</span> Table
         </button>
-        <button onClick={() => window.addAsset('sofa')} style={assetBtnStyle}>
+        <button onClick={() => handleAddAsset('sofa')} style={assetBtnStyle}>
           <span style={btnIconStyle}>🛋️</span> Sofa
+        </button>
+        <button onClick={() => handleAddAsset('bed')} style={assetBtnStyle}>
+          <span style={btnIconStyle}>🛏️</span> Bed
+        </button>
+        <button onClick={() => handleAddAsset('desk')} style={assetBtnStyle}>
+          <span style={btnIconStyle}>🗄️</span> Desk
         </button>
       </div>
 
@@ -80,17 +131,16 @@ const LeftSidebar = ({ roomDimensions, onRoomChange }) => {
       {/* Transform Section */}
       <div style={sectionStyle}>
         <h3 style={headingStyle}>
-          <span style={iconStyle}>🎯</span> Transform
+          <span style={iconStyle}>💡</span> Tips
         </h3>
-        <button onClick={() => window.setMode('translate')} style={transformBtnStyle}>
-          <span style={btnIconStyle}>↔️</span> Move <kbd style={kbdStyle}>G</kbd>
-        </button>
-        <button onClick={() => window.setMode('rotate')} style={transformBtnStyle}>
-          <span style={btnIconStyle}>🔄</span> Rotate <kbd style={kbdStyle}>R</kbd>
-        </button>
-        <button onClick={() => window.setMode('scale')} style={transformBtnStyle}>
-          <span style={btnIconStyle}>📏</span> Scale <kbd style={kbdStyle}>S</kbd>
-        </button>
+        <div style={tipBoxStyle}>
+          <div style={{fontSize: '12px', color: '#aaa', lineHeight: '1.6'}}>
+            • Click furniture to select<br/>
+            • Drag to move in 2D view<br/>
+            • Use properties panel to adjust<br/>
+            • Switch between 2D/3D views
+          </div>
+        </div>
       </div>
     </aside>
   );
@@ -143,22 +193,29 @@ const labelStyle = {
   fontWeight: '500'
 };
 
-const rangeStyle = {
+const numberInputStyle = {
   width: '100%',
-  height: '6px',
-  background: '#333',
-  borderRadius: '3px',
+  padding: '10px 12px',
+  background: '#222',
+  border: '2px solid #333',
+  borderRadius: '6px',
+  color: '#4a9eff',
+  fontSize: '14px',
+  fontWeight: '600',
   outline: 'none',
-  cursor: 'pointer',
-  accentColor: '#4a9eff'
+  transition: 'border-color 0.2s'
 };
 
-const valueStyle = {
-  display: 'inline-block',
-  marginTop: '5px',
+const selectStyle = {
+  width: '100%',
+  padding: '10px 12px',
+  background: '#222',
+  border: '2px solid #333',
+  borderRadius: '6px',
+  color: '#fff',
   fontSize: '13px',
-  color: '#4a9eff',
-  fontWeight: '600'
+  outline: 'none',
+  cursor: 'pointer'
 };
 
 const colorInputStyle = {
@@ -188,34 +245,15 @@ const assetBtnStyle = {
   boxShadow: '0 2px 5px rgba(0,0,0,0.2)'
 };
 
-const transformBtnStyle = {
-  width: '100%',
-  padding: '12px 16px',
-  marginBottom: '10px',
-  cursor: 'pointer',
-  background: '#2a2a2a',
-  color: 'white',
-  border: '1px solid #444',
-  borderRadius: '8px',
-  fontSize: '14px',
-  fontWeight: '500',
-  display: 'flex',
-  alignItems: 'center',
-  justifyContent: 'space-between',
-  transition: 'all 0.2s ease'
-};
-
 const btnIconStyle = {
   fontSize: '16px'
 };
 
-const kbdStyle = {
-  background: '#444',
-  padding: '2px 8px',
-  borderRadius: '4px',
-  fontSize: '11px',
-  fontWeight: 'bold',
-  border: '1px solid #555'
+const tipBoxStyle = {
+  background: '#1a1a2e',
+  padding: '14px',
+  borderRadius: '8px',
+  border: '1px solid #2a2a4e'
 };
 
 export default LeftSidebar;
