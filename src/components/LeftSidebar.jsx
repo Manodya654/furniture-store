@@ -7,15 +7,28 @@ const LeftSidebar = ({ roomDimensions, onRoomChange, onAddFurniture }) => {
   };
 
   const handleAddAsset = (type) => {
+    // Calculate safe spawn area (avoid walls)
+    const safeWidth = (roomDimensions.width - 2) * 0.8;  // 80% of width, 1m from walls
+    const safeDepth = (roomDimensions.depth - 2) * 0.8;  // 80% of depth, 1m from walls
+    
+    // Random position within safe area
+    const randomX = (Math.random() - 0.5) * safeWidth;
+    const randomZ = (Math.random() - 0.5) * safeDepth;
+    
     const newItem = {
-      id: `${type}_${Date.now()}`,
+      id: `${type}_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
       type: type,
       name: type,
-      position: { x: 0, y: 0, z: 0 },
-      rotation: 0,
+      position: { 
+        x: randomX, 
+        y: 0,  // Always on the floor!
+        z: randomZ 
+      },
+      rotation: Math.random() * 360,  // Random rotation for variety
       scale: 1,
-      color: '#8B7355'
+      color: '#8B7355'  // Default wood color
     };
+    
     onAddFurniture(newItem);
   };
 
@@ -34,7 +47,7 @@ const LeftSidebar = ({ roomDimensions, onRoomChange, onAddFurniture }) => {
             <div style={inputWrapperStyle}>
               <input 
                 type="number" 
-                min="2" 
+                min="3" 
                 max="20" 
                 step="0.5"
                 value={roomDimensions.width}
@@ -66,7 +79,7 @@ const LeftSidebar = ({ roomDimensions, onRoomChange, onAddFurniture }) => {
             <div style={inputWrapperStyle}>
               <input 
                 type="number" 
-                min="2" 
+                min="3" 
                 max="20" 
                 step="0.5"
                 value={roomDimensions.depth}
@@ -161,25 +174,19 @@ const LeftSidebar = ({ roomDimensions, onRoomChange, onAddFurniture }) => {
 
       <div style={dividerStyle}></div>
 
-      {/* Transform Shortcuts Section */}
+      {/* Help Section */}
       <div style={sectionStyle}>
         <div style={sectionHeaderStyle}>
-          <div style={iconBoxStyle}>⌨️</div>
-          <h3 style={headingStyle}>Shortcuts</h3>
+          <div style={iconBoxStyle}>💡</div>
+          <h3 style={headingStyle}>Tips</h3>
         </div>
-        <div style={shortcutsBoxStyle}>
-          <div style={shortcutItemStyle}>
-            <kbd style={kbdStyle}>G</kbd>
-            <span style={shortcutTextStyle}>Move</span>
-          </div>
-          <div style={shortcutItemStyle}>
-            <kbd style={kbdStyle}>R</kbd>
-            <span style={shortcutTextStyle}>Rotate</span>
-          </div>
-          <div style={shortcutItemStyle}>
-            <kbd style={kbdStyle}>S</kbd>
-            <span style={shortcutTextStyle}>Scale</span>
-          </div>
+        <div style={tipsBoxStyle}>
+          <div style={tipItemStyle}>• Click furniture to select</div>
+          <div style={tipItemStyle}>• Drag to move (or press G)</div>
+          <div style={tipItemStyle}>• Press R to rotate</div>
+          <div style={tipItemStyle}>• Press S to scale</div>
+          <div style={tipItemStyle}>• Delete key to remove</div>
+          <div style={tipItemStyle}>• Use right panel for colors</div>
         </div>
       </div>
     </aside>
@@ -353,41 +360,20 @@ const assetIconStyle = {
   filter: 'drop-shadow(0 2px 4px rgba(0,0,0,0.3))'
 };
 
-const shortcutsBoxStyle = {
+const tipsBoxStyle = {
   background: '#0a0a0a',
   padding: '16px',
   borderRadius: '10px',
   border: '1px solid #2a2a2a',
   display: 'flex',
   flexDirection: 'column',
-  gap: '12px'
+  gap: '10px'
 };
 
-const shortcutItemStyle = {
-  display: 'flex',
-  alignItems: 'center',
-  gap: '12px'
-};
-
-const kbdStyle = {
-  minWidth: '32px',
-  height: '32px',
-  background: 'linear-gradient(180deg, #2a2a2a 0%, #1a1a1a 100%)',
-  padding: '0 12px',
-  borderRadius: '6px',
-  fontSize: '13px',
-  fontWeight: 'bold',
-  border: '1px solid #3a3a3a',
-  color: '#4a9eff',
-  display: 'flex',
-  alignItems: 'center',
-  justifyContent: 'center',
-  boxShadow: '0 2px 4px rgba(0,0,0,0.3)'
-};
-
-const shortcutTextStyle = {
+const tipItemStyle = {
   fontSize: '12px',
-  color: '#aaa'
+  color: '#aaa',
+  lineHeight: '1.6'
 };
 
 export default LeftSidebar;

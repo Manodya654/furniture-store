@@ -2,7 +2,7 @@ import { useState } from "react";
 import ThreeScene from "./components/ThreeScene";
 import TwoD_Scene from "./components/TwoD_Scene";
 import LeftSidebar from "./components/LeftSidebar";
-import RightSidebar from "./components/RightSideBar";
+import RightSidebar from "./components/RightSidebar";
 import DesignManager from "./components/DesignManager";
 
 import LoginPage from "./pages/LoginPage";
@@ -66,12 +66,21 @@ function App() {
     setCurrentPage('designer'); // Switch to designer when a design is loaded
   };
 
+  const handleDeleteDesign = (id) => {
+    setSavedDesigns(prev => prev.filter(d => d.id !== id));
+  };
+
   const handleNewDesign = () => {
     setFurniture([]);
     setSelected(null);
     setCurrentDesignName('Untitled Design');
     setRoomDimensions({
-      width: 6, height: 3, depth: 5, wallColor: '#e8e8e8', floorStyle: 'tiles', floorColor: '#d4b896'
+      width: 6, 
+      height: 3, 
+      depth: 5, 
+      wallColor: '#e8e8e8', 
+      floorStyle: 'tiles', 
+      floorColor: '#d4b896'
     });
   };
 
@@ -82,7 +91,12 @@ function App() {
   }
 
   if (currentPage === 'home') {
-    return <HomePage onStartDesign={() => setCurrentPage('gallery')} onLogout={() => setCurrentPage('login')} />;
+    return (
+      <HomePage 
+        onStartDesign={() => setCurrentPage('gallery')} 
+        onLogout={() => setCurrentPage('login')} 
+      />
+    );
   }
 
   if (currentPage === 'gallery') {
@@ -106,6 +120,7 @@ function App() {
       background: '#0a0a0a',
       fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif'
     }}>
+      {/* Header */}
       <header style={{
         height: '60px', 
         background: 'linear-gradient(135deg, #0a0a0a 0%, #1a1a1a 100%)',
@@ -117,7 +132,19 @@ function App() {
         boxShadow: '0 2px 10px rgba(0,0,0,0.5)'
       }}>
         <div style={{display: 'flex', alignItems: 'center', gap: '12px'}}>
-          <span style={{cursor: 'pointer'}} onClick={() => setCurrentPage('gallery')}>⬅️</span>
+          <button
+            onClick={() => setCurrentPage('gallery')}
+            style={{
+              background: 'transparent',
+              border: 'none',
+              color: '#4a9eff',
+              cursor: 'pointer',
+              fontSize: '20px',
+              padding: '4px 8px'
+            }}
+          >
+            ← Back
+          </button>
           <h2 style={{
             margin: 0, 
             fontSize: '20px', 
@@ -129,7 +156,11 @@ function App() {
           }}>
             Furniture Studio Pro
           </h2>
-          <span style={{ fontSize: '14px', color: '#888', marginLeft: '20px' }}>
+          <span style={{ 
+            fontSize: '14px', 
+            color: '#888', 
+            marginLeft: '20px' 
+          }}>
             {currentDesignName}
           </span>
         </div>
@@ -144,23 +175,57 @@ function App() {
             currentName={currentDesignName}
           />
           
-          <div style={{ background: '#222', borderRadius: '8px', padding: '4px', display: 'flex', gap: '4px' }}>
-            <button onClick={() => setViewMode('2d')} style={{ /* styles from your version 1 */
-              padding: '8px 16px', background: viewMode === '2d' ? '#4a9eff' : 'transparent', color: 'white', border: 'none', borderRadius: '6px', cursor: 'pointer', fontSize: '13px', fontWeight: '600'
-            }}>2D View</button>
-            <button onClick={() => setViewMode('3d')} style={{ /* styles from your version 1 */
-              padding: '8px 16px', background: viewMode === '3d' ? '#4a9eff' : 'transparent', color: 'white', border: 'none', borderRadius: '6px', cursor: 'pointer', fontSize: '13px', fontWeight: '600'
-            }}>3D View</button>
+          <div style={{ 
+            background: '#222', 
+            borderRadius: '8px', 
+            padding: '4px', 
+            display: 'flex', 
+            gap: '4px' 
+          }}>
+            <button 
+              onClick={() => setViewMode('2d')} 
+              style={{
+                padding: '8px 16px', 
+                background: viewMode === '2d' ? '#4a9eff' : 'transparent', 
+                color: 'white', 
+                border: 'none', 
+                borderRadius: '6px', 
+                cursor: 'pointer', 
+                fontSize: '13px', 
+                fontWeight: '600',
+                transition: 'all 0.2s'
+              }}
+            >
+              2D View
+            </button>
+            <button 
+              onClick={() => setViewMode('3d')} 
+              style={{
+                padding: '8px 16px', 
+                background: viewMode === '3d' ? '#4a9eff' : 'transparent', 
+                color: 'white', 
+                border: 'none', 
+                borderRadius: '6px', 
+                cursor: 'pointer', 
+                fontSize: '13px', 
+                fontWeight: '600',
+                transition: 'all 0.2s'
+              }}
+            >
+              3D View
+            </button>
           </div>
         </div>
       </header>
       
+      {/* Main Design Area */}
       <div style={{ display: "flex", flex: 1, overflow: 'hidden' }}>
         <LeftSidebar 
           roomDimensions={roomDimensions} 
           onRoomChange={setRoomDimensions}
           onAddFurniture={handleAddFurniture}
         />
+        
         <main style={{ flex: 1, position: "relative", background: '#0a0a0a' }}>
           {viewMode === '3d' ? (
             <ThreeScene 
@@ -180,6 +245,7 @@ function App() {
             />
           )}
         </main>
+        
         <RightSidebar 
           selected={selected}
           onUpdateFurniture={handleUpdateFurniture}
