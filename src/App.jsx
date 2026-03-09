@@ -2,7 +2,7 @@ import { useState } from "react";
 import ThreeScene from "./components/ThreeScene";
 import TwoD_Scene from "./components/TwoD_Scene";
 import LeftSidebar from "./components/LeftSidebar";
-import RightSidebar from "./components/RightSideBar";
+import RightSidebar from "./components/RightSidebar";
 import DesignManager from "./components/DesignManager";
 
 import LoginPage from "./pages/LoginPage";
