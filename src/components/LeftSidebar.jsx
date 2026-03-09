@@ -7,11 +7,9 @@ const LeftSidebar = ({ roomDimensions, onRoomChange, onAddFurniture }) => {
   };
 
   const handleAddAsset = (type) => {
-    // Calculate safe spawn area (avoid walls)
-    const safeWidth = (roomDimensions.width - 2) * 0.8;  // 80% of width, 1m from walls
-    const safeDepth = (roomDimensions.depth - 2) * 0.8;  // 80% of depth, 1m from walls
+    const safeWidth = (roomDimensions.width - 2) * 0.8;
+    const safeDepth = (roomDimensions.depth - 2) * 0.8;
     
-    // Random position within safe area
     const randomX = (Math.random() - 0.5) * safeWidth;
     const randomZ = (Math.random() - 0.5) * safeDepth;
     
@@ -19,14 +17,10 @@ const LeftSidebar = ({ roomDimensions, onRoomChange, onAddFurniture }) => {
       id: `${type}_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
       type: type,
       name: type,
-      position: { 
-        x: randomX, 
-        y: 0,  // Always on the floor!
-        z: randomZ 
-      },
-      rotation: Math.random() * 360,  // Random rotation for variety
+      position: { x: randomX, y: 0, z: randomZ },
+      rotation: Math.random() * 360,
       scale: 1,
-      color: '#8B7355'  // Default wood color
+      color: '#8B7355'
     };
     
     onAddFurniture(newItem);
@@ -34,7 +28,7 @@ const LeftSidebar = ({ roomDimensions, onRoomChange, onAddFurniture }) => {
 
   return (
     <aside style={sideStyle}>
-      {/* Room Configuration Section */}
+      {/* Room Configuration */}
       <div style={sectionStyle}>
         <div style={sectionHeaderStyle}>
           <div style={iconBoxStyle}>🏠</div>
@@ -47,9 +41,7 @@ const LeftSidebar = ({ roomDimensions, onRoomChange, onAddFurniture }) => {
             <div style={inputWrapperStyle}>
               <input 
                 type="number" 
-                min="3" 
-                max="20" 
-                step="0.5"
+                min="3" max="20" step="0.5"
                 value={roomDimensions.width}
                 onChange={(e) => handleDimensionChange('width', e.target.value)}
                 style={numberInputStyle}
@@ -63,9 +55,7 @@ const LeftSidebar = ({ roomDimensions, onRoomChange, onAddFurniture }) => {
             <div style={inputWrapperStyle}>
               <input 
                 type="number" 
-                min="2" 
-                max="6" 
-                step="0.1"
+                min="2" max="6" step="0.1"
                 value={roomDimensions.height}
                 onChange={(e) => handleDimensionChange('height', e.target.value)}
                 style={numberInputStyle}
@@ -79,9 +69,7 @@ const LeftSidebar = ({ roomDimensions, onRoomChange, onAddFurniture }) => {
             <div style={inputWrapperStyle}>
               <input 
                 type="number" 
-                min="3" 
-                max="20" 
-                step="0.5"
+                min="3" max="20" step="0.5"
                 value={roomDimensions.depth}
                 onChange={(e) => handleDimensionChange('depth', e.target.value)}
                 style={numberInputStyle}
@@ -137,7 +125,7 @@ const LeftSidebar = ({ roomDimensions, onRoomChange, onAddFurniture }) => {
 
       <div style={dividerStyle}></div>
 
-      {/* Assets Section */}
+      {/* Furniture */}
       <div style={sectionStyle}>
         <div style={sectionHeaderStyle}>
           <div style={iconBoxStyle}>🪑</div>
@@ -169,24 +157,6 @@ const LeftSidebar = ({ roomDimensions, onRoomChange, onAddFurniture }) => {
             <span style={assetIconStyle}>💡</span>
             <span>Lamp</span>
           </button>
-        </div>
-      </div>
-
-      <div style={dividerStyle}></div>
-
-      {/* Help Section */}
-      <div style={sectionStyle}>
-        <div style={sectionHeaderStyle}>
-          <div style={iconBoxStyle}>💡</div>
-          <h3 style={headingStyle}>Tips</h3>
-        </div>
-        <div style={tipsBoxStyle}>
-          <div style={tipItemStyle}>• Click furniture to select</div>
-          <div style={tipItemStyle}>• Drag to move (or press G)</div>
-          <div style={tipItemStyle}>• Press R to rotate</div>
-          <div style={tipItemStyle}>• Press S to scale</div>
-          <div style={tipItemStyle}>• Delete key to remove</div>
-          <div style={tipItemStyle}>• Use right panel for colors</div>
         </div>
       </div>
     </aside>
@@ -350,30 +320,12 @@ const assetBtnStyle = {
   alignItems: 'center',
   gap: '8px',
   transition: 'all 0.3s ease',
-  boxShadow: '0 4px 12px rgba(102, 126, 234, 0.25)',
-  position: 'relative',
-  overflow: 'hidden'
+  boxShadow: '0 4px 12px rgba(102, 126, 234, 0.25)'
 };
 
 const assetIconStyle = {
   fontSize: '28px',
   filter: 'drop-shadow(0 2px 4px rgba(0,0,0,0.3))'
-};
-
-const tipsBoxStyle = {
-  background: '#0a0a0a',
-  padding: '16px',
-  borderRadius: '10px',
-  border: '1px solid #2a2a2a',
-  display: 'flex',
-  flexDirection: 'column',
-  gap: '10px'
-};
-
-const tipItemStyle = {
-  fontSize: '12px',
-  color: '#aaa',
-  lineHeight: '1.6'
 };
 
 export default LeftSidebar;

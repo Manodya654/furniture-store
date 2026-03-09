@@ -55,7 +55,7 @@ const RightSidebar = ({ selected, onUpdateFurniture, onDeleteFurniture }) => {
 
       {selected ? (
         <div style={contentStyle}>
-          {/* Selected Item Info */}
+          {/* Info */}
           <div style={infoCardStyle}>
             <div style={itemHeaderStyle}>
               <div style={itemIconStyle}>{getFurnitureIcon(selected.type)}</div>
@@ -66,7 +66,7 @@ const RightSidebar = ({ selected, onUpdateFurniture, onDeleteFurniture }) => {
             </div>
           </div>
 
-          {/* Position Controls */}
+          {/* Position */}
           <div style={controlCardStyle}>
             <div style={cardHeaderStyle}>
               <span style={cardIconStyle}>📍</span>
@@ -106,7 +106,7 @@ const RightSidebar = ({ selected, onUpdateFurniture, onDeleteFurniture }) => {
             </div>
           </div>
 
-          {/* Rotation Control */}
+          {/* Rotation */}
           <div style={controlCardStyle}>
             <div style={cardHeaderStyle}>
               <span style={cardIconStyle}>🔄</span>
@@ -123,7 +123,7 @@ const RightSidebar = ({ selected, onUpdateFurniture, onDeleteFurniture }) => {
             <div style={sliderValueStyle}>{(selected.rotation || 0).toFixed(0)}°</div>
           </div>
 
-          {/* Scale Control */}
+          {/* Scale */}
           <div style={controlCardStyle}>
             <div style={cardHeaderStyle}>
               <span style={cardIconStyle}>📏</span>
@@ -141,7 +141,7 @@ const RightSidebar = ({ selected, onUpdateFurniture, onDeleteFurniture }) => {
             <div style={sliderValueStyle}>{((selected.scale || 1) * 100).toFixed(0)}%</div>
           </div>
 
-          {/* Color Control */}
+          {/* Color */}
           <div style={controlCardStyle}>
             <div style={cardHeaderStyle}>
               <span style={cardIconStyle}>🎨</span>
@@ -155,7 +155,7 @@ const RightSidebar = ({ selected, onUpdateFurniture, onDeleteFurniture }) => {
             />
           </div>
 
-          {/* Delete Action */}
+          {/* Delete */}
           <button 
             onClick={() => onDeleteFurniture(selected.id)} 
             style={deleteBtnStyle}
@@ -169,7 +169,7 @@ const RightSidebar = ({ selected, onUpdateFurniture, onDeleteFurniture }) => {
           <div style={emptyIconStyle}>👆</div>
           <div style={emptyTitleStyle}>No Selection</div>
           <div style={emptyTextStyle}>
-            Click on any furniture in the scene to view and edit its properties
+            Click on furniture to edit properties
           </div>
         </div>
       )}
@@ -396,8 +396,7 @@ const emptyTitleStyle = {
 const emptyTextStyle = {
   fontSize: '13px',
   color: '#666',
-  lineHeight: '1.8',
-  maxWidth: '220px'
+  lineHeight: '1.8'
 };
 
 export default RightSidebar;
