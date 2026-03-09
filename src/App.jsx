@@ -2,7 +2,7 @@ import { useState } from "react";
 import ThreeScene from "./components/ThreeScene";
 import TwoD_Scene from "./components/TwoD_Scene";
 import LeftSidebar from "./components/LeftSidebar";
-import RightSidebar from "./components/RightSidebar";
+import RightSidebar from "./components/RightSideBar";
 import DesignManager from "./components/DesignManager";
 
 import LoginPage from "./pages/LoginPage";
@@ -10,10 +10,7 @@ import HomePage from "./pages/HomePage";
 import GalleryPage from "./pages/GalleryPage";
 
 function App() {
-  // Navigation State
   const [currentPage, setCurrentPage] = useState('login');
-
-  // Designer Logic State 
   const [viewMode, setViewMode] = useState('3d');
   const [selected, setSelected] = useState(null);
   const [furniture, setFurniture] = useState([]);
@@ -29,18 +26,30 @@ function App() {
     floorColor: '#d4b896'
   });
 
-  // Handlers 
   const handleAddFurniture = (item) => {
+    console.log('Adding furniture:', item);
     setFurniture(prev => [...prev, item]);
   };
 
   const handleUpdateFurniture = (id, updates) => {
+    console.log('Updating furniture:', id, updates);
+    
+    // Handle delete signal
+    if (updates._shouldDelete) {
+      console.log('Deleting furniture:', id);
+      setFurniture(prev => prev.filter(item => item.id !== id));
+      if (selected?.id === id) setSelected(null);
+      return;
+    }
+    
+    // Normal update
     setFurniture(prev => prev.map(item => 
       item.id === id ? { ...item, ...updates } : item
     ));
   };
 
   const handleDeleteFurniture = (id) => {
+    console.log('Delete furniture called:', id);
     setFurniture(prev => prev.filter(item => item.id !== id));
     if (selected?.id === id) setSelected(null);
   };
@@ -63,7 +72,7 @@ function App() {
     setFurniture([...design.furniture]);
     setCurrentDesignName(design.name);
     setSelected(null);
-    setCurrentPage('designer'); // Switch to designer when a design is loaded
+    setCurrentPage('designer');
   };
 
   const handleDeleteDesign = (id) => {
@@ -84,8 +93,6 @@ function App() {
     });
   };
 
-  // --- ROUTING LOGIC ---
-  
   if (currentPage === 'login') {
     return <LoginPage onLogin={() => setCurrentPage('home')} />;
   }
@@ -108,7 +115,6 @@ function App() {
     );
   }
 
-  // If page is 'designer', render the full studio 
   return (
     <div style={{ 
       display: "flex", 
@@ -120,7 +126,6 @@ function App() {
       background: '#0a0a0a',
       fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif'
     }}>
-      {/* Header */}
       <header style={{
         height: '60px', 
         background: 'linear-gradient(135deg, #0a0a0a 0%, #1a1a1a 100%)',
@@ -218,7 +223,6 @@ function App() {
         </div>
       </header>
       
-      {/* Main Design Area */}
       <div style={{ display: "flex", flex: 1, overflow: 'hidden' }}>
         <LeftSidebar 
           roomDimensions={roomDimensions} 
