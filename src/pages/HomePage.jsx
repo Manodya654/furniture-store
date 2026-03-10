@@ -79,7 +79,7 @@ const HomePage = ({ onStartDesign, onOpenGallery, onLogout }) => {
             {furnitureAssets.map((asset) => (
               <div 
                 key={asset.id}
-                onClick={onOpenGallery} // මේ Cards click කළාමත් යන්නේ Gallery එකට
+                onClick={onOpenGallery} 
                 className="group bg-slate-900/40 border border-slate-800 p-6 rounded-[32px] hover:border-emerald-500/30 transition-all cursor-pointer relative overflow-hidden"
               >
                 <div className="text-5xl mb-6 group-hover:scale-110 group-hover:-rotate-6 transition-transform duration-300">
@@ -109,9 +109,7 @@ const HomePage = ({ onStartDesign, onOpenGallery, onLogout }) => {
               <span className="text-xs text-slate-300 font-medium">3D Visualization Mode</span>
             </div>
           </div>
-          <p className="text-[9px] font-bold text-slate-700 uppercase tracking-[4px]">
-            Academic Project | PUSL3122 HCI Edition
-          </p>
+         
         </footer>
       </div>
     </div>
