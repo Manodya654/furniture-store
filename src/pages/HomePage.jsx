@@ -1,6 +1,7 @@
 import React from 'react';
 
-const HomePage = ({ onStartDesign, onLogout }) => {
+// අලුතින් onOpenGallery කියන prop එක එකතු කළා
+const HomePage = ({ onStartDesign, onOpenGallery, onLogout }) => {
   
   const furnitureAssets = [
     { name: 'Luxury Sofa', icon: '🛋️', info: 'Living Room Sectional', id: 'sofa' },
@@ -37,7 +38,7 @@ const HomePage = ({ onStartDesign, onLogout }) => {
           </div>
         </header>
 
-        {/* Hero Section: New Project - HCI Efficiency */}
+        {/* Hero Section: New Project - මේක Click කළාම යන්නේ Workspace එකට (Designer) */}
         <div 
           onClick={onStartDesign}
           className="group relative bg-emerald-950/20 border border-emerald-500/20 rounded-[40px] p-10 mb-16 overflow-hidden cursor-pointer hover:border-emerald-500/50 transition-all shadow-2xl"
@@ -62,18 +63,23 @@ const HomePage = ({ onStartDesign, onLogout }) => {
           <div className="flex justify-between items-end">
             <div>
               <h3 className="text-xl font-bold text-white tracking-tight">Furniture Library</h3>
-              <p className="text-slate-500 text-xs mt-1">Select an asset to view in the 3D scene</p>
+              <p className="text-slate-500 text-xs mt-1">Select an asset to view its 3D & 2D details in the Gallery</p>
             </div>
-            <span className="text-[10px] font-bold text-emerald-500 bg-emerald-500/10 px-3 py-1 rounded-full border border-emerald-500/20 uppercase tracking-widest">
-              {furnitureAssets.length} Models Loaded
-            </span>
+            
+            {/* අලුත් Button එක - මේක Click කළාම යන්නේ Gallery එකට */}
+            <button 
+              onClick={onOpenGallery}
+              className="text-[10px] font-bold text-emerald-500 bg-emerald-500/10 px-5 py-2.5 rounded-full border border-emerald-500/20 uppercase tracking-widest hover:bg-emerald-500 hover:text-white transition-all shadow-lg hover:shadow-emerald-500/30"
+            >
+              View Full Gallery →
+            </button>
           </div>
 
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-6">
             {furnitureAssets.map((asset) => (
               <div 
                 key={asset.id}
-                onClick={onStartDesign}
+                onClick={onOpenGallery} // මේ Cards click කළාමත් යන්නේ Gallery එකට
                 className="group bg-slate-900/40 border border-slate-800 p-6 rounded-[32px] hover:border-emerald-500/30 transition-all cursor-pointer relative overflow-hidden"
               >
                 <div className="text-5xl mb-6 group-hover:scale-110 group-hover:-rotate-6 transition-transform duration-300">
@@ -91,7 +97,7 @@ const HomePage = ({ onStartDesign, onLogout }) => {
           </div>
         </div>
 
-        {/* System Stats Footer - HCI Feedback */}
+        {/* System Stats Footer */}
         <footer className="mt-24 pt-8 border-t border-slate-800/50 flex flex-col md:flex-row justify-between items-center gap-6">
           <div className="flex gap-8">
             <div className="flex flex-col gap-1">
