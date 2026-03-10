@@ -1,6 +1,6 @@
 import React from 'react';
 
-// අලුතින් onOpenGallery කියන prop එක එකතු කළා
+
 const HomePage = ({ onStartDesign, onOpenGallery, onLogout }) => {
   
   const furnitureAssets = [
@@ -38,7 +38,7 @@ const HomePage = ({ onStartDesign, onOpenGallery, onLogout }) => {
           </div>
         </header>
 
-        {/* Hero Section: New Project - මේක Click කළාම යන්නේ Workspace එකට (Designer) */}
+        {/* Hero Section */}
         <div 
           onClick={onStartDesign}
           className="group relative bg-emerald-950/20 border border-emerald-500/20 rounded-[40px] p-10 mb-16 overflow-hidden cursor-pointer hover:border-emerald-500/50 transition-all shadow-2xl"
@@ -66,7 +66,7 @@ const HomePage = ({ onStartDesign, onOpenGallery, onLogout }) => {
               <p className="text-slate-500 text-xs mt-1">Select an asset to view its 3D & 2D details in the Gallery</p>
             </div>
             
-            {/* අලුත් Button එක - මේක Click කළාම යන්නේ Gallery එකට */}
+           
             <button 
               onClick={onOpenGallery}
               className="text-[10px] font-bold text-emerald-500 bg-emerald-500/10 px-5 py-2.5 rounded-full border border-emerald-500/20 uppercase tracking-widest hover:bg-emerald-500 hover:text-white transition-all shadow-lg hover:shadow-emerald-500/30"
