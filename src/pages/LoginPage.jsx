@@ -31,7 +31,7 @@ const LoginPage = ({ onLogin }) => {
     alt="Modern Interior" 
     className="w-full h-full object-cover opacity-60 transition-transform duration-[5000ms] hover:scale-105"
   />
-  {/* Overlay: රූපය මත ඇති අඳුරු ගතිය අඩු කර අකුරු වල contrast එක රැකගෙන ඇත */}
+ 
   <div className="absolute inset-0 bg-gradient-to-tr from-[#020617] via-[#020617]/40 to-transparent" />
   <div className="absolute inset-0 bg-black/20" /> 
 </div>
