@@ -2,14 +2,12 @@ import React, { useState, Suspense } from 'react';
 import { Canvas } from '@react-three/fiber';
 import { OrbitControls, Environment, ContactShadows, Float } from '@react-three/drei';
 
-// --- Placeholder 3D Model ---
-// ඔයාගේ ඇත්තම .glb/.gltf models තියෙනවා නම් මේක වෙනුවට useGLTF() පාවිච්චි කරන්න පුළුවන්.
-// දැනට ලස්සනට පේන්න මම Glass/Holographic style 3D shape එකක් හැදුවා.
+
 const FurniturePlaceholder3D = ({ type }) => {
   return (
     <Float speed={2} rotationIntensity={0.5} floatIntensity={1}>
       <mesh castShadow receiveShadow>
-        {/* Type එක අනුව shape එක වෙනස් වෙනවා */}
+       
         {type === 'sofa' ? <boxGeometry args={[2, 0.8, 1]} /> : 
          type === 'table' ? <cylinderGeometry args={[1, 1, 0.1, 32]} /> :
          type === 'lamp' ? <coneGeometry args={[0.5, 2, 16]} /> :
