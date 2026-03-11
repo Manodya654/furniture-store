@@ -1,4 +1,4 @@
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useCallback } from "react";
 import * as THREE from "three";
 import { OrbitControls } from "three/examples/jsm/controls/OrbitControls";
 import { TransformControls } from "three/examples/jsm/controls/TransformControls";
@@ -14,9 +14,9 @@ const ThreeScene = ({ onSelect, selected, roomDimensions, furniture, onUpdateFur
   const furnitureObjects = useRef({});
   const roomRef = useRef(null);
   const loaderRef = useRef(new GLTFLoader());
-  const isTransforming = useRef(false); // Track if we're actively dragging
+  const updateInProgress = useRef(false);
 
-  const updateWallVisibility = () => {
+  const updateWallVisibility = useCallback(() => {
     if (!cameraRef.current || !roomRef.current) return;
     
     const camera = cameraRef.current;
@@ -31,7 +31,7 @@ const ThreeScene = ({ onSelect, selected, roomDimensions, furniture, onUpdateFur
     rightWall.visible = !(camPos.x > halfWidth);
     leftWall.visible = !(camPos.x < -halfWidth);
     ceiling.visible = !(camPos.y > roomDimensions.height);
-  };
+  }, [roomDimensions.width, roomDimensions.depth, roomDimensions.height]);
 
   useEffect(() => {
     const container = mountRef.current;
@@ -55,10 +55,15 @@ const ThreeScene = ({ onSelect, selected, roomDimensions, furniture, onUpdateFur
     camera.lookAt(0, 0, 0);
     cameraRef.current = camera;
 
-    const renderer = new THREE.WebGLRenderer({ antialias: true });
+    // FIXED: Better renderer settings for smooth shadows
+    const renderer = new THREE.WebGLRenderer({ 
+      antialias: true,
+      powerPreference: "high-performance" 
+    });
     renderer.setSize(container.clientWidth, container.clientHeight);
+    renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2)); // Limit for performance
     renderer.shadowMap.enabled = true;
-    renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+    renderer.shadowMap.type = THREE.PCFSoftShadowMap; // Smooth shadows!
     container.appendChild(renderer.domElement);
     rendererRef.current = renderer;
 
@@ -76,32 +81,39 @@ const ThreeScene = ({ onSelect, selected, roomDimensions, furniture, onUpdateFur
     const transformControls = new TransformControls(camera, renderer.domElement);
     transformControls.setMode('translate');
     transformControls.setSpace('world');
+    transformControls.setSize(1.2); // Make gizmo bigger
     scene.add(transformControls);
     transformControlsRef.current = transformControls;
 
+    // CRITICAL: Disable orbit when dragging transform
     transformControls.addEventListener('dragging-changed', (event) => {
       orbitControls.enabled = !event.value;
-      isTransforming.current = event.value;
       
-      // Only update when FINISHED dragging
-      if (!event.value && transformControls.object) {
+      if (!event.value) {
+        // Dragging finished - save the changes
         const obj = transformControls.object;
-        if (obj.userData.furnitureId) {
+        if (obj && obj.userData.furnitureId && !updateInProgress.current) {
+          updateInProgress.current = true;
           const id = obj.userData.furnitureId;
-          onUpdateFurniture(id, {
-            position: { 
-              x: obj.position.x, 
-              y: obj.position.y, 
-              z: obj.position.z 
-            },
-            rotation: (obj.rotation.y * 180 / Math.PI) % 360,
-            scale: obj.scale.x
-          });
+          
+          // Batch update after a short delay
+          setTimeout(() => {
+            onUpdateFurniture(id, {
+              position: { 
+                x: parseFloat(obj.position.x.toFixed(2)), 
+                y: parseFloat(obj.position.y.toFixed(2)), 
+                z: parseFloat(obj.position.z.toFixed(2))
+              },
+              rotation: parseFloat(((obj.rotation.y * 180 / Math.PI) % 360).toFixed(1)),
+              scale: parseFloat(obj.scale.x.toFixed(2))
+            });
+            updateInProgress.current = false;
+          }, 50);
         }
       }
     });
 
-    // Keyboard
+    // Keyboard shortcuts
     const handleKeyDown = (event) => {
       const tc = transformControlsRef.current;
       if (!tc || !tc.object) return;
@@ -118,33 +130,41 @@ const ThreeScene = ({ onSelect, selected, roomDimensions, furniture, onUpdateFur
       } else if (event.key === 'Delete' || event.key === 'Backspace') {
         event.preventDefault();
         if (selected) {
-          onUpdateFurniture(selected.id, { _shouldDelete: true });
           tc.detach();
           onSelect(null);
+          // Delete via the delete handler
+          setTimeout(() => {
+            onUpdateFurniture(selected.id, { _shouldDelete: true });
+          }, 10);
         }
       }
     };
     window.addEventListener('keydown', handleKeyDown);
 
-    // Lighting
-    scene.add(new THREE.AmbientLight(0xffffff, 0.7));
+    // FIXED: Better lighting for smooth shadows
+    scene.add(new THREE.AmbientLight(0xffffff, 0.6));
     
-    const dirLight1 = new THREE.DirectionalLight(0xffffff, 0.8);
+    const dirLight1 = new THREE.DirectionalLight(0xffffff, 0.6);
     dirLight1.position.set(10, 20, 10);
     dirLight1.castShadow = true;
-    dirLight1.shadow.camera.left = -30;
-    dirLight1.shadow.camera.right = 30;
-    dirLight1.shadow.camera.top = 30;
-    dirLight1.shadow.camera.bottom = -30;
-    dirLight1.shadow.mapSize.width = 2048;
-    dirLight1.shadow.mapSize.height = 2048;
+    // FIXED: Larger shadow map for smoother shadows
+    dirLight1.shadow.mapSize.width = 4096;  // Increased from 2048
+    dirLight1.shadow.mapSize.height = 4096; // Increased from 2048
+    dirLight1.shadow.camera.left = -50;
+    dirLight1.shadow.camera.right = 50;
+    dirLight1.shadow.camera.top = 50;
+    dirLight1.shadow.camera.bottom = -50;
+    dirLight1.shadow.camera.near = 0.5;
+    dirLight1.shadow.camera.far = 100;
+    dirLight1.shadow.bias = -0.0001; // Reduce shadow acne
+    dirLight1.shadow.radius = 4; // Blur shadow edges
     scene.add(dirLight1);
 
-    const dirLight2 = new THREE.DirectionalLight(0xffffff, 0.4);
+    const dirLight2 = new THREE.DirectionalLight(0xffffff, 0.3);
     dirLight2.position.set(-10, 15, -10);
     scene.add(dirLight2);
 
-    // Floor
+    // Floor texture
     const createFloorTexture = (style, color) => {
       const canvas = document.createElement('canvas');
       canvas.width = 512;
@@ -272,12 +292,18 @@ const ThreeScene = ({ onSelect, selected, roomDimensions, furniture, onUpdateFur
     roomRef.current = { backWall, leftWall, rightWall, frontWall, ceiling, floor };
     updateWallVisibility();
 
-    // Mouse click
+    // Mouse click to select
     const raycaster = new THREE.Raycaster();
     const mouse = new THREE.Vector2();
+    let clickStartTime = 0;
 
-    const onMouseClick = (event) => {
-      if (isTransforming.current) return; // Don't select while dragging
+    const onMouseDown = () => {
+      clickStartTime = Date.now();
+    };
+
+    const onMouseUp = (event) => {
+      const clickDuration = Date.now() - clickStartTime;
+      if (clickDuration > 200) return; // Was a drag, not a click
       
       const rect = renderer.domElement.getBoundingClientRect();
       mouse.x = ((event.clientX - rect.left) / rect.width) * 2 - 1;
@@ -294,19 +320,22 @@ const ThreeScene = ({ onSelect, selected, roomDimensions, furniture, onUpdateFur
         }
         if (obj.userData.furnitureId) {
           const item = furniture.find(f => f.id === obj.userData.furnitureId);
+          console.log('Selected:', item);
           onSelect(item);
           transformControls.attach(obj);
           transformControls.setMode('translate');
         }
       } else {
+        console.log('Deselected');
         onSelect(null);
         transformControls.detach();
       }
     };
 
-    renderer.domElement.addEventListener('click', onMouseClick);
+    renderer.domElement.addEventListener('mousedown', onMouseDown);
+    renderer.domElement.addEventListener('mouseup', onMouseUp);
 
-    // Animation
+    // Animation loop
     const animate = () => {
       requestAnimationFrame(animate);
       orbitControls.update();
@@ -325,7 +354,8 @@ const ThreeScene = ({ onSelect, selected, roomDimensions, furniture, onUpdateFur
     return () => {
       window.removeEventListener('resize', handleResize);
       window.removeEventListener('keydown', handleKeyDown);
-      renderer.domElement.removeEventListener('click', onMouseClick);
+      renderer.domElement.removeEventListener('mousedown', onMouseDown);
+      renderer.domElement.removeEventListener('mouseup', onMouseUp);
       renderer.dispose();
       if (container.contains(renderer.domElement)) {
         container.removeChild(renderer.domElement);
@@ -333,36 +363,60 @@ const ThreeScene = ({ onSelect, selected, roomDimensions, furniture, onUpdateFur
     };
   }, []);
 
-  // Load furniture - ONLY when furniture array changes structurally (add/remove)
+  // Load furniture models - only when new items added
   useEffect(() => {
-    if (!sceneRef.current || !furniture) return;
+    if (!sceneRef.current) return;
 
     const scene = sceneRef.current;
     const loader = loaderRef.current;
 
-    // Get current IDs
-    const currentIds = new Set(Object.keys(furnitureObjects.current));
-    const newIds = new Set(furniture.map(item => item.id));
+    console.log('Furniture effect triggered. Count:', furniture.length);
 
     // Remove deleted items
+    const currentIds = new Set(Object.keys(furnitureObjects.current));
+    const newIds = new Set(furniture.filter(f => !f._shouldDelete).map(f => f.id));
+
     currentIds.forEach(id => {
       if (!newIds.has(id)) {
+        console.log('Removing:', id);
         const obj = furnitureObjects.current[id];
         scene.remove(obj);
         delete furnitureObjects.current[id];
       }
     });
 
-    // Add new items only
+    // Load new items
     furniture.forEach(item => {
       if (item._shouldDelete) return;
-      if (furnitureObjects.current[item.id]) return; // Already exists, don't reload
+      if (furnitureObjects.current[item.id]) {
+        // Already loaded, just update transform
+        const obj = furnitureObjects.current[item.id];
+        if (!updateInProgress.current) {
+          obj.position.set(item.position.x, item.position.y || 0, item.position.z);
+          obj.rotation.y = (item.rotation || 0) * Math.PI / 180;
+          obj.scale.setScalar(item.scale || 1);
+          
+          // Update color
+          obj.traverse(child => {
+            if (child.isMesh && item.color) {
+              if (Array.isArray(child.material)) {
+                child.material.forEach(mat => mat.color.set(item.color));
+              } else {
+                child.material.color.set(item.color);
+              }
+            }
+          });
+        }
+        return;
+      }
       
+      console.log('Loading new item:', item.type, item.id);
       const modelPath = `/models/${item.type}.glb`;
       
       loader.load(
         modelPath,
         (gltf) => {
+          console.log('Model loaded:', item.type);
           const model = gltf.scene;
           
           const wrapper = new THREE.Group();
@@ -399,9 +453,10 @@ const ThreeScene = ({ onSelect, selected, roomDimensions, furniture, onUpdateFur
 
           scene.add(wrapper);
           furnitureObjects.current[item.id] = wrapper;
+          console.log('Added to scene:', item.id);
 
-          // Auto-attach if selected
           if (selected && selected.id === item.id && transformControlsRef.current) {
+            console.log('Auto-attaching to:', item.id);
             transformControlsRef.current.attach(wrapper);
           }
         },
@@ -411,32 +466,7 @@ const ThreeScene = ({ onSelect, selected, roomDimensions, furniture, onUpdateFur
         }
       );
     });
-  }, [furniture.length]); // Only re-run when count changes!
-
-  // Update existing furniture transforms WITHOUT reloading models
-  useEffect(() => {
-    if (isTransforming.current) return; // Don't update while dragging
-    
-    furniture.forEach(item => {
-      const obj = furnitureObjects.current[item.id];
-      if (obj && !item._shouldDelete) {
-        obj.position.set(item.position.x, item.position.y || 0, item.position.z);
-        obj.rotation.y = (item.rotation || 0) * Math.PI / 180;
-        obj.scale.setScalar(item.scale || 1);
-        
-        // Update color
-        obj.traverse(child => {
-          if (child.isMesh && item.color) {
-            if (Array.isArray(child.material)) {
-              child.material.forEach(mat => mat.color.set(item.color));
-            } else {
-              child.material.color.set(item.color);
-            }
-          }
-        });
-      }
-    });
-  }, [furniture]);
+  }, [furniture, selected]);
 
   // Update selection highlight
   useEffect(() => {
@@ -445,7 +475,7 @@ const ThreeScene = ({ onSelect, selected, roomDimensions, furniture, onUpdateFur
       wrapper.traverse(child => {
         if (child.isMesh) {
           child.material.emissive = isSelected ? new THREE.Color(0x4a9eff) : new THREE.Color(0x000000);
-          child.material.emissiveIntensity = isSelected ? 0.3 : 0;
+          child.material.emissiveIntensity = isSelected ? 0.4 : 0;
         }
       });
     });
@@ -567,7 +597,7 @@ const ThreeScene = ({ onSelect, selected, roomDimensions, furniture, onUpdateFur
     ceiling.position.y = roomDimensions.height;
 
     updateWallVisibility();
-  }, [roomDimensions]);
+  }, [roomDimensions, updateWallVisibility]);
 
   return <div ref={mountRef} style={{ width: "100%", height: "100%" }} />;
 };
