@@ -9,7 +9,7 @@ const LoginPage = ({ onLogin }) => {
     key: ''
   });
 
-  // HCI Principle: Error Prevention - Input එක වෙනස් කරන විට පරණ error අයින් කිරීම
+  // HCI Principle: Error Prevention
   const handleInputChange = (e) => {
     const { name, value } = e.target;
     setCredentials(prev => ({ ...prev, [name]: value }));
