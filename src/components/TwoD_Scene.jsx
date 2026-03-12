@@ -202,18 +202,7 @@ const TwoD_Scene = ({ onSelect, selected, roomDimensions, furniture, onUpdateFur
         onWheel={handleWheel}
         style={{ display: 'block', cursor: dragging ? 'grabbing' : 'default' }}
       />
-      
-      {/* RESTORED: The Info Box Overlay */}
-      <div style={{
-        position: 'absolute', top: '20px', right: '20px',
-        background: 'rgba(0,0,0,0.8)', padding: '15px', borderRadius: '8px',
-        fontSize: '12px', color: '#aaa', pointerEvents: 'none'
-      }}>
-        <div style={{fontWeight: 'bold', color: '#4a9eff', marginBottom: '8px'}}>2D Floor Plan</div>
-        <div>• Click to select furniture</div>
-        <div>• Drag to move</div>
-        <div>• Scroll to zoom</div>
-      </div>
+    
     </div>
   );
 };
