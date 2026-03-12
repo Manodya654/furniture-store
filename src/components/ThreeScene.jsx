@@ -258,6 +258,53 @@ const ThreeScene = ({ onSelect, roomDimensions }) => {
 
     const loader = new GLTFLoader();
 
+    // Track spawn positions to prevent overlapping
+    const spawnedPositions = [];
+    
+    const getRandomSpawnPosition = () => {
+      const safeWidth = roomDimensions.width * 0.8;
+      const safeDepth = roomDimensions.depth * 0.8;
+      const minDistance = 1.5; // Minimum distance between objects
+      
+      let attempts = 0;
+      let position;
+      
+      while (attempts < 50) {
+        position = {
+          x: (Math.random() - 0.5) * safeWidth,
+          z: (Math.random() - 0.5) * safeDepth
+        };
+        
+        // Check if position is far enough from existing items
+        let valid = true;
+        for (let pos of spawnedPositions) {
+          const dist = Math.sqrt(
+            Math.pow(position.x - pos.x, 2) + 
+            Math.pow(position.z - pos.z, 2)
+          );
+          if (dist < minDistance) {
+            valid = false;
+            break;
+          }
+        }
+        
+        if (valid) {
+          spawnedPositions.push(position);
+          return position;
+        }
+        
+        attempts++;
+      }
+      
+      // If we can't find a good spot, just use random
+      position = {
+        x: (Math.random() - 0.5) * safeWidth,
+        z: (Math.random() - 0.5) * safeDepth
+      };
+      spawnedPositions.push(position);
+      return position;
+    };
+
     // Add asset with proper sizing
     window.addAsset = (name) => {
       loader.load(`/models/${name}.glb`, (gltf) => {
@@ -286,20 +333,16 @@ const ThreeScene = ({ onSelect, roomDimensions }) => {
         box.setFromObject(model);
         model.position.y = -box.min.y;
 
-        const safeWidth = roomDimensions.width * 0.4;
-        const safeDepth = roomDimensions.depth * 0.4;
-        wrapper.position.set(
-          (Math.random() - 0.5) * safeWidth,
-          0,
-          (Math.random() - 0.5) * safeDepth
-        );
+        const spawnPos = getRandomSpawnPosition();
+        wrapper.position.set(spawnPos.x, 0, spawnPos.z);
         
         scene.add(wrapper);
         furnitureList.current.push(wrapper);
         
         // Attach transform controls and highlight
         transform.attach(wrapper);
-        transform.setMode('translate'); // Ensure we're in translate mode
+        transform.setMode('translate');
+        console.log('Transform attached to:', name);
         
         // Add blue glow to selected
         wrapper.traverse(n => {
@@ -325,8 +368,30 @@ const ThreeScene = ({ onSelect, roomDimensions }) => {
       }
     };
 
+    // Keyboard shortcuts for transform modes
+    const handleKeyDown = (event) => {
+      if (event.key === 'g' || event.key === 'G') {
+        event.preventDefault();
+        transform.setMode('translate');
+        console.log('Switched to MOVE mode (G)');
+      } else if (event.key === 'r' || event.key === 'R') {
+        event.preventDefault();
+        transform.setMode('rotate');
+        console.log('Switched to ROTATE mode (R)');
+      } else if (event.key === 's' || event.key === 'S') {
+        event.preventDefault();
+        transform.setMode('scale');
+        console.log('Switched to SCALE mode (S)');
+      }
+    };
+    window.addEventListener('keydown', handleKeyDown);
+
     window.setMode = (mode) => {
       console.log('Setting transform mode to:', mode);
+      if (!transform.object) {
+        console.warn('No object selected! Click on furniture first.');
+        return;
+      }
       transform.setMode(mode);
     };
     
@@ -418,6 +483,7 @@ const ThreeScene = ({ onSelect, roomDimensions }) => {
     window.addEventListener("resize", handleResize);
 
     return () => {
+      window.removeEventListener('keydown', handleKeyDown);
       window.removeEventListener("resize", handleResize);
       renderer.dispose();
       if(container.contains(renderer.domElement)) container.removeChild(renderer.domElement);
