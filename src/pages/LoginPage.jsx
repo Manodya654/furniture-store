@@ -24,14 +24,14 @@ const LoginPage = ({ onLogin }) => {
   return (
     <div className="relative min-h-screen w-full flex items-center justify-center overflow-hidden font-sans bg-[#020617]">
       
-      {/* Dynamic Background - රූපය පැහැදිලිව පෙනෙන ලෙස සකසා ඇත */}
+      {/* Dynamic Background  */}
 <div className="absolute inset-0 z-0">
   <img 
     src="https://images.unsplash.com/photo-1618221195710-dd6b41faaea6?q=80&w=2000&auto=format&fit=crop" 
     alt="Modern Interior" 
     className="w-full h-full object-cover opacity-60 transition-transform duration-[5000ms] hover:scale-105"
   />
-  {/* Overlay: රූපය මත ඇති අඳුරු ගතිය අඩු කර අකුරු වල contrast එක රැකගෙන ඇත */}
+ 
   <div className="absolute inset-0 bg-gradient-to-tr from-[#020617] via-[#020617]/40 to-transparent" />
   <div className="absolute inset-0 bg-black/20" /> 
 </div>

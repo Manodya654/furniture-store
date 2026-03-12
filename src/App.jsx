@@ -100,7 +100,8 @@ function App() {
   if (currentPage === 'home') {
     return (
       <HomePage 
-        onStartDesign={() => setCurrentPage('gallery')} 
+        onStartDesign={() => setCurrentPage('designer')} // Designer එකට යන function එක
+        onOpenGallery={() => setCurrentPage('gallery')}  // Gallery එකට යන අලුත් function එක
         onLogout={() => setCurrentPage('login')} 
       />
     );
