@@ -1,315 +1,262 @@
-const LeftSidebar = ({ roomDimensions, onRoomChange, onAddFurniture }) => {
-  const handleDimensionChange = (field, value) => {
-    const numValue = parseFloat(value);
-    if (!isNaN(numValue) && numValue > 0) {
-      onRoomChange({ ...roomDimensions, [field]: numValue });
-    }
-  };
-
-  const handleAddAsset = (type) => {
-    const safeWidth = (roomDimensions.width - 2) * 0.8;
-    const safeDepth = (roomDimensions.depth - 2) * 0.8;
-    
-    const randomX = (Math.random() - 0.5) * safeWidth;
-    const randomZ = (Math.random() - 0.5) * safeDepth;
-    
-    const newItem = {
-      id: `${type}_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
-      type: type,
-      name: type,
-      position: { x: randomX, y: 0, z: randomZ },
-      rotation: Math.random() * 360,
-      scale: 1,
-      color: '#8B7355'
-    };
-    
-    onAddFurniture(newItem);
-  };
-
+const LeftSidebar = ({ roomDimensions, onRoomChange }) => {
   return (
     <aside style={sideStyle}>
-      {/* Room Configuration */}
+      {/* Room Setup Section */}
       <div style={sectionStyle}>
-        <div style={sectionHeaderStyle}>
-          <div style={iconBoxStyle}>🏠</div>
-          <h3 style={headingStyle}>Room Setup</h3>
-        </div>
+        <h3 style={headingStyle}>
+          <span style={iconStyle}>🏠</span> ROOM SETUP
+        </h3>
         
-        <div style={dimensionsGridStyle}>
-          <div style={dimInputGroupStyle}>
+        <div style={gridStyle}>
+          <div style={controlStyle}>
             <label style={labelStyle}>Width</label>
-            <div style={inputWrapperStyle}>
-              <input 
-                type="number" 
-                min="3" max="20" step="0.5"
-                value={roomDimensions.width}
-                onChange={(e) => handleDimensionChange('width', e.target.value)}
-                style={numberInputStyle}
-              />
-              <span style={unitStyle}>m</span>
-            </div>
+            <input 
+              type="number" 
+              min="3" 
+              max="20" 
+              step="0.5"
+              value={roomDimensions.width}
+              onChange={(e) => onRoomChange({ ...roomDimensions, width: parseFloat(e.target.value) || 6 })}
+              style={inputStyle}
+            />
+            <span style={unitStyle}>m</span>
           </div>
 
-          <div style={dimInputGroupStyle}>
+          <div style={controlStyle}>
             <label style={labelStyle}>Height</label>
-            <div style={inputWrapperStyle}>
-              <input 
-                type="number" 
-                min="2" max="6" step="0.1"
-                value={roomDimensions.height}
-                onChange={(e) => handleDimensionChange('height', e.target.value)}
-                style={numberInputStyle}
-              />
-              <span style={unitStyle}>m</span>
-            </div>
+            <input 
+              type="number" 
+              min="2" 
+              max="6" 
+              step="0.5"
+              value={roomDimensions.height}
+              onChange={(e) => onRoomChange({ ...roomDimensions, height: parseFloat(e.target.value) || 3 })}
+              style={inputStyle}
+            />
+            <span style={unitStyle}>m</span>
           </div>
 
-          <div style={dimInputGroupStyle}>
+          <div style={controlStyle}>
             <label style={labelStyle}>Depth</label>
-            <div style={inputWrapperStyle}>
-              <input 
-                type="number" 
-                min="3" max="20" step="0.5"
-                value={roomDimensions.depth}
-                onChange={(e) => handleDimensionChange('depth', e.target.value)}
-                style={numberInputStyle}
-              />
-              <span style={unitStyle}>m</span>
-            </div>
+            <input 
+              type="number" 
+              min="3" 
+              max="20" 
+              step="0.5"
+              value={roomDimensions.depth}
+              onChange={(e) => onRoomChange({ ...roomDimensions, depth: parseFloat(e.target.value) || 5 })}
+              style={inputStyle}
+            />
+            <span style={unitStyle}>m</span>
           </div>
         </div>
 
-        <div style={colorControlsStyle}>
-          <div style={colorGroupStyle}>
-            <label style={labelStyle}>
-              <span style={labelIconStyle}>🎨</span> Wall Color
-            </label>
-            <input 
-              type="color" 
-              value={roomDimensions.wallColor}
-              onChange={(e) => onRoomChange({ ...roomDimensions, wallColor: e.target.value })}
-              style={colorInputStyle}
-            />
-          </div>
+        <div style={controlGroupStyle}>
+          <label style={labelStyle}>Wall Color</label>
+          <input 
+            type="color" 
+            value={roomDimensions.wallColor || '#e8e8e8'}
+            onChange={(e) => onRoomChange({ ...roomDimensions, wallColor: e.target.value })}
+            style={colorInputStyle}
+          />
+        </div>
 
-          <div style={colorGroupStyle}>
-            <label style={labelStyle}>
-              <span style={labelIconStyle}>⬜</span> Floor Style
-            </label>
-            <select
-              value={roomDimensions.floorStyle}
-              onChange={(e) => onRoomChange({ ...roomDimensions, floorStyle: e.target.value })}
-              style={selectStyle}
-            >
-              <option value="tiles">Tiles Pattern</option>
-              <option value="wood">Wood Planks</option>
-              <option value="marble">Marble</option>
-              <option value="carpet">Carpet</option>
-              <option value="solid">Solid Color</option>
-            </select>
-          </div>
+        <div style={controlGroupStyle}>
+          <label style={labelStyle}>Floor Style</label>
+          <select 
+            value={roomDimensions.floorStyle || 'tiles'}
+            onChange={(e) => onRoomChange({ ...roomDimensions, floorStyle: e.target.value })}
+            style={selectStyle}
+          >
+            <option value="tiles">Tiles</option>
+            <option value="wood">Wood</option>
+            <option value="marble">Marble</option>
+            <option value="carpet">Carpet</option>
+            <option value="solid">Solid</option>
+          </select>
+        </div>
 
-          <div style={colorGroupStyle}>
-            <label style={labelStyle}>
-              <span style={labelIconStyle}>🎨</span> Floor Color
-            </label>
-            <input 
-              type="color" 
-              value={roomDimensions.floorColor}
-              onChange={(e) => onRoomChange({ ...roomDimensions, floorColor: e.target.value })}
-              style={colorInputStyle}
-            />
-          </div>
+        <div style={controlGroupStyle}>
+          <label style={labelStyle}>Floor Color</label>
+          <input 
+            type="color" 
+            value={roomDimensions.floorColor || '#d4b896'}
+            onChange={(e) => onRoomChange({ ...roomDimensions, floorColor: e.target.value })}
+            style={colorInputStyle}
+          />
         </div>
       </div>
 
       <div style={dividerStyle}></div>
 
-      {/* Furniture */}
+      {/* Furniture Grid */}
+      <div style={furnitureGridStyle}>
+        <button onClick={() => window.addAsset('chair')} style={assetBtnStyle}>
+          <span style={btnIconStyle}>🪑</span>
+          <span>Chair</span>
+        </button>
+        <button onClick={() => window.addAsset('table')} style={assetBtnStyle}>
+          <span style={btnIconStyle}>🪵</span>
+          <span>Table</span>
+        </button>
+        <button onClick={() => window.addAsset('sofa')} style={assetBtnStyle}>
+          <span style={btnIconStyle}>🛋️</span>
+          <span>Sofa</span>
+        </button>
+        <button onClick={() => window.addAsset('bed')} style={assetBtnStyle}>
+          <span style={btnIconStyle}>🛏️</span>
+          <span>Bed</span>
+        </button>
+        <button onClick={() => window.addAsset('desk')} style={assetBtnStyle}>
+          <span style={btnIconStyle}>🗄️</span>
+          <span>Desk</span>
+        </button>
+        <button onClick={() => window.addAsset('lamp')} style={assetBtnStyle}>
+          <span style={btnIconStyle}>💡</span>
+          <span>Lamp</span>
+        </button>
+      </div>
+
+      <div style={dividerStyle}></div>
+
+      {/* Transform Tools */}
       <div style={sectionStyle}>
-        <div style={sectionHeaderStyle}>
-          <div style={iconBoxStyle}>🪑</div>
-          <h3 style={headingStyle}>Add Furniture</h3>
-        </div>
+        <h3 style={headingStyle}>
+          <span style={iconStyle}>🎯</span> TRANSFORM TOOLS
+        </h3>
         
-        <div style={furnitureGridStyle}>
-          <button onClick={() => handleAddAsset('chair')} style={assetBtnStyle}>
-            <span style={assetIconStyle}>🪑</span>
-            <span>Chair</span>
-          </button>
-          <button onClick={() => handleAddAsset('table')} style={assetBtnStyle}>
-            <span style={assetIconStyle}>🪵</span>
-            <span>Table</span>
-          </button>
-          <button onClick={() => handleAddAsset('sofa')} style={assetBtnStyle}>
-            <span style={assetIconStyle}>🛋️</span>
-            <span>Sofa</span>
-          </button>
-          <button onClick={() => handleAddAsset('bed')} style={assetBtnStyle}>
-            <span style={assetIconStyle}>🛏️</span>
-            <span>Bed</span>
-          </button>
-          <button onClick={() => handleAddAsset('desk')} style={assetBtnStyle}>
-            <span style={assetIconStyle}>🗄️</span>
-            <span>Desk</span>
-          </button>
-          <button onClick={() => handleAddAsset('lamp')} style={assetBtnStyle}>
-            <span style={assetIconStyle}>💡</span>
-            <span>Lamp</span>
-          </button>
-        </div>
+        <button onClick={() => window.setMode('translate')} style={transformBtnStyle}>
+          <span style={transformIconStyle}>↔️</span>
+          <span style={transformTextStyle}>Move</span>
+          <kbd style={kbdStyle}>G</kbd>
+        </button>
+        <button onClick={() => window.setMode('rotate')} style={transformBtnStyle}>
+          <span style={transformIconStyle}>🔄</span>
+          <span style={transformTextStyle}>Rotate</span>
+          <kbd style={kbdStyle}>R</kbd>
+        </button>
+        <button onClick={() => window.setMode('scale')} style={transformBtnStyle}>
+          <span style={transformIconStyle}>📏</span>
+          <span style={transformTextStyle}>Scale</span>
+          <kbd style={kbdStyle}>S</kbd>
+        </button>
       </div>
     </aside>
   );
 };
 
 const sideStyle = { 
-  width: '300px', 
-  background: 'linear-gradient(180deg, #1e1e1e 0%, #121212 100%)',
-  borderRight: '1px solid #2a2a2a',
+  width: '270px', 
+  background: '#000',
+  borderRight: '1px solid #1a1a1a',
   overflowY: 'auto',
-  overflowX: 'hidden',
-  boxShadow: '4px 0 20px rgba(0,0,0,0.3)'
+  display: 'flex',
+  flexDirection: 'column'
 };
 
 const sectionStyle = {
-  padding: '24px 20px'
-};
-
-const sectionHeaderStyle = {
-  display: 'flex',
-  alignItems: 'center',
-  gap: '12px',
-  marginBottom: '20px'
-};
-
-const iconBoxStyle = {
-  width: '36px',
-  height: '36px',
-  background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
-  borderRadius: '10px',
-  display: 'flex',
-  alignItems: 'center',
-  justifyContent: 'center',
-  fontSize: '18px',
-  boxShadow: '0 4px 12px rgba(102, 126, 234, 0.3)'
+  padding: '20px'
 };
 
 const headingStyle = {
-  margin: 0,
-  fontSize: '16px',
+  margin: '0 0 18px 0',
+  fontSize: '11px',
   fontWeight: '700',
   color: '#fff',
-  letterSpacing: '0.5px'
+  textTransform: 'uppercase',
+  letterSpacing: '1.5px',
+  display: 'flex',
+  alignItems: 'center',
+  gap: '10px'
+};
+
+const iconStyle = {
+  fontSize: '16px'
 };
 
 const dividerStyle = {
   height: '1px',
-  background: 'linear-gradient(90deg, transparent, #2a2a2a, transparent)',
+  background: '#1a1a1a',
   margin: '0'
 };
 
-const dimensionsGridStyle = {
+const gridStyle = {
   display: 'grid',
   gridTemplateColumns: 'repeat(3, 1fr)',
-  gap: '12px',
-  marginBottom: '20px'
+  gap: '10px',
+  marginBottom: '16px'
 };
 
-const dimInputGroupStyle = {
+const controlStyle = {
   display: 'flex',
   flexDirection: 'column',
-  gap: '8px'
-};
-
-const labelStyle = {
-  fontSize: '11px',
-  color: '#999',
-  fontWeight: '600',
-  textTransform: 'uppercase',
-  letterSpacing: '0.5px',
-  display: 'flex',
-  alignItems: 'center',
   gap: '6px'
 };
 
-const labelIconStyle = {
-  fontSize: '14px'
+const labelStyle = {
+  fontSize: '10px',
+  color: '#888',
+  fontWeight: '600',
+  textTransform: 'uppercase',
+  letterSpacing: '0.5px'
 };
 
-const inputWrapperStyle = {
-  position: 'relative',
-  display: 'flex',
-  alignItems: 'center'
-};
-
-const numberInputStyle = {
+const inputStyle = {
   width: '100%',
-  padding: '10px 32px 10px 12px',
+  padding: '8px 6px',
   background: '#0a0a0a',
-  border: '2px solid #2a2a2a',
-  borderRadius: '8px',
-  color: '#4a9eff',
-  fontSize: '14px',
+  border: '1px solid #2a2a2a',
+  borderRadius: '6px',
+  color: '#10b981',
+  fontSize: '13px',
   fontWeight: '600',
   outline: 'none',
-  transition: 'border-color 0.2s, box-shadow 0.2s'
+  textAlign: 'center'
 };
 
 const unitStyle = {
-  position: 'absolute',
-  right: '12px',
-  fontSize: '11px',
+  fontSize: '10px',
   color: '#666',
-  fontWeight: '600',
-  pointerEvents: 'none'
+  textAlign: 'center'
 };
 
-const colorControlsStyle = {
-  display: 'flex',
-  flexDirection: 'column',
-  gap: '16px'
-};
-
-const colorGroupStyle = {
-  display: 'flex',
-  flexDirection: 'column',
-  gap: '8px'
-};
-
-const selectStyle = {
-  width: '100%',
-  padding: '10px 12px',
-  background: '#0a0a0a',
-  border: '2px solid #2a2a2a',
-  borderRadius: '8px',
-  color: '#fff',
-  fontSize: '13px',
-  outline: 'none',
-  cursor: 'pointer',
-  transition: 'border-color 0.2s'
+const controlGroupStyle = {
+  marginBottom: '14px'
 };
 
 const colorInputStyle = {
   width: '100%',
-  height: '50px',
-  border: '2px solid #2a2a2a',
-  borderRadius: '8px',
+  height: '45px',
+  border: '1px solid #2a2a2a',
+  borderRadius: '6px',
   cursor: 'pointer',
+  background: '#0a0a0a'
+};
+
+const selectStyle = {
+  width: '100%',
+  padding: '10px',
   background: '#0a0a0a',
-  transition: 'border-color 0.2s'
+  border: '1px solid #2a2a2a',
+  borderRadius: '6px',
+  color: '#fff',
+  fontSize: '12px',
+  fontWeight: '500',
+  cursor: 'pointer',
+  outline: 'none'
 };
 
 const furnitureGridStyle = {
   display: 'grid',
   gridTemplateColumns: 'repeat(2, 1fr)',
-  gap: '12px'
+  gap: '12px',
+  padding: '20px'
 };
 
 const assetBtnStyle = {
-  padding: '16px 12px',
+  padding: '18px 10px',
   cursor: 'pointer',
-  background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+  background: 'linear-gradient(135deg, #10b981 0%, #059669 100%)',
   color: 'white',
   border: 'none',
   borderRadius: '12px',
@@ -319,13 +266,49 @@ const assetBtnStyle = {
   flexDirection: 'column',
   alignItems: 'center',
   gap: '8px',
-  transition: 'all 0.3s ease',
-  boxShadow: '0 4px 12px rgba(102, 126, 234, 0.25)'
+  transition: 'transform 0.1s ease',
+  boxShadow: '0 2px 8px rgba(16, 185, 129, 0.3)'
 };
 
-const assetIconStyle = {
-  fontSize: '28px',
-  filter: 'drop-shadow(0 2px 4px rgba(0,0,0,0.3))'
+const btnIconStyle = {
+  fontSize: '32px'
+};
+
+const transformBtnStyle = {
+  width: '100%',
+  padding: '12px 14px',
+  marginBottom: '10px',
+  cursor: 'pointer',
+  background: '#0a0a0a',
+  color: '#fff',
+  border: '1px solid #2a2a2a',
+  borderRadius: '8px',
+  fontSize: '13px',
+  fontWeight: '600',
+  display: 'flex',
+  alignItems: 'center',
+  gap: '10px',
+  transition: 'background 0.2s ease'
+};
+
+const transformIconStyle = {
+  fontSize: '18px'
+};
+
+const transformTextStyle = {
+  flex: 1,
+  textAlign: 'left'
+};
+
+const kbdStyle = {
+  background: '#1a1a1a',
+  padding: '4px 10px',
+  borderRadius: '6px',
+  fontSize: '11px',
+  fontWeight: 'bold',
+  border: '1px solid #2a2a2a',
+  color: '#10b981',
+  fontFamily: 'monospace'
 };
 
 export default LeftSidebar;

@@ -1,37 +1,15 @@
-import { useEffect, useRef, useCallback } from "react";
+import { useEffect, useRef } from "react";
 import * as THREE from "three";
 import { OrbitControls } from "three/examples/jsm/controls/OrbitControls";
 import { TransformControls } from "three/examples/jsm/controls/TransformControls";
 import { GLTFLoader } from "three/examples/jsm/loaders/GLTFLoader";
 
-const ThreeScene = ({ onSelect, selected, roomDimensions, furniture, onUpdateFurniture }) => {
+const ThreeScene = ({ onSelect, roomDimensions }) => {
   const mountRef = useRef(null);
+  const furnitureList = useRef([]);
+  const wallsRef = useRef(null);
   const sceneRef = useRef(null);
   const cameraRef = useRef(null);
-  const rendererRef = useRef(null);
-  const orbitControlsRef = useRef(null);
-  const transformControlsRef = useRef(null);
-  const furnitureObjects = useRef({});
-  const roomRef = useRef(null);
-  const loaderRef = useRef(new GLTFLoader());
-  const updateInProgress = useRef(false);
-
-  const updateWallVisibility = useCallback(() => {
-    if (!cameraRef.current || !roomRef.current) return;
-    
-    const camera = cameraRef.current;
-    const { backWall, leftWall, rightWall, frontWall, ceiling } = roomRef.current;
-    
-    const camPos = camera.position;
-    const halfWidth = roomDimensions.width / 2;
-    const halfDepth = roomDimensions.depth / 2;
-    
-    frontWall.visible = !(camPos.z > halfDepth);
-    backWall.visible = !(camPos.z < -halfDepth);
-    rightWall.visible = !(camPos.x > halfWidth);
-    leftWall.visible = !(camPos.x < -halfWidth);
-    ceiling.visible = !(camPos.y > roomDimensions.height);
-  }, [roomDimensions.width, roomDimensions.depth, roomDimensions.height]);
 
   useEffect(() => {
     const container = mountRef.current;
@@ -41,12 +19,8 @@ const ThreeScene = ({ onSelect, selected, roomDimensions, furniture, onUpdateFur
     sceneRef.current = scene;
     scene.background = new THREE.Color(0x87ceeb);
 
-    const camera = new THREE.PerspectiveCamera(
-      60,
-      container.clientWidth / container.clientHeight,
-      0.1,
-      1000
-    );
+    const camera = new THREE.PerspectiveCamera(75, container.clientWidth / container.clientHeight, 0.1, 1000);
+    // Position camera OUTSIDE the room looking in
     camera.position.set(
       roomDimensions.width * 1.2,
       roomDimensions.height * 1.2,
@@ -55,116 +29,83 @@ const ThreeScene = ({ onSelect, selected, roomDimensions, furniture, onUpdateFur
     camera.lookAt(0, 0, 0);
     cameraRef.current = camera;
 
-    // FIXED: Better renderer settings for smooth shadows
-    const renderer = new THREE.WebGLRenderer({ 
-      antialias: true,
-      powerPreference: "high-performance" 
-    });
+    const renderer = new THREE.WebGLRenderer({ antialias: true });
     renderer.setSize(container.clientWidth, container.clientHeight);
-    renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2)); // Limit for performance
+    renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
     renderer.shadowMap.enabled = true;
-    renderer.shadowMap.type = THREE.PCFSoftShadowMap; // Smooth shadows!
+    renderer.shadowMap.type = THREE.PCFSoftShadowMap;
     container.appendChild(renderer.domElement);
-    rendererRef.current = renderer;
 
-    const orbitControls = new OrbitControls(camera, renderer.domElement);
-    orbitControls.enableDamping = true;
-    orbitControls.dampingFactor = 0.05;
-    orbitControls.minDistance = 3;
-    orbitControls.maxDistance = 100;
-    orbitControls.target.set(0, 0, 0);
-    orbitControls.update();
-    orbitControlsRef.current = orbitControls;
+    const orbit = new OrbitControls(camera, renderer.domElement);
+    orbit.enableDamping = true;
+    orbit.dampingFactor = 0.05;
+    orbit.target.set(0, 0, 0);
+    orbit.update();
 
-    orbitControls.addEventListener('change', updateWallVisibility);
+    // Transform Controls
+    const transform = new TransformControls(camera, renderer.domElement);
+    transform.setMode('translate'); // Start in move mode
+    transform.setSize(1.5); // Make gizmo bigger
+    scene.add(transform);
 
-    const transformControls = new TransformControls(camera, renderer.domElement);
-    transformControls.setMode('translate');
-    transformControls.setSpace('world');
-    transformControls.setSize(1.2); // Make gizmo bigger
-    scene.add(transformControls);
-    transformControlsRef.current = transformControls;
+    transform.addEventListener("dragging-changed", (e) => {
+      orbit.enabled = !e.value;
+    });
 
-    // CRITICAL: Disable orbit when dragging transform
-    transformControls.addEventListener('dragging-changed', (event) => {
-      orbitControls.enabled = !event.value;
-      
-      if (!event.value) {
-        // Dragging finished - save the changes
-        const obj = transformControls.object;
-        if (obj && obj.userData.furnitureId && !updateInProgress.current) {
-          updateInProgress.current = true;
-          const id = obj.userData.furnitureId;
-          
-          // Batch update after a short delay
-          setTimeout(() => {
-            onUpdateFurniture(id, {
-              position: { 
-                x: parseFloat(obj.position.x.toFixed(2)), 
-                y: parseFloat(obj.position.y.toFixed(2)), 
-                z: parseFloat(obj.position.z.toFixed(2))
-              },
-              rotation: parseFloat(((obj.rotation.y * 180 / Math.PI) % 360).toFixed(1)),
-              scale: parseFloat(obj.scale.x.toFixed(2))
-            });
-            updateInProgress.current = false;
-          }, 50);
-        }
+    // Also disable orbit when mouse is over transform controls
+    transform.addEventListener("mouseDown", () => {
+      orbit.enabled = false;
+    });
+    
+    transform.addEventListener("mouseUp", () => {
+      orbit.enabled = true;
+    });
+
+    transform.addEventListener("change", () => {
+      if (transform.object) {
+        const obj = transform.object;
+        
+        const box = new THREE.Box3().setFromObject(obj);
+        const size = box.getSize(new THREE.Vector3());
+        
+        const halfWidth = roomDimensions.width / 2;
+        const halfDepth = roomDimensions.depth / 2;
+        const roomFloor = 0;
+        const roomCeiling = roomDimensions.height;
+
+        const paddingX = size.x / 2;
+        if (obj.position.x > halfWidth - paddingX) obj.position.x = halfWidth - paddingX;
+        if (obj.position.x < -halfWidth + paddingX) obj.position.x = -halfWidth + paddingX;
+
+        const paddingZ = size.z / 2;
+        if (obj.position.z > halfDepth - paddingZ) obj.position.z = halfDepth - paddingZ;
+        if (obj.position.z < -halfDepth + paddingZ) obj.position.z = -halfDepth + paddingZ;
+
+        if (obj.position.y < roomFloor) obj.position.y = roomFloor;
+        if (obj.position.y > roomCeiling - size.y) obj.position.y = roomCeiling - size.y;
       }
     });
 
-    // Keyboard shortcuts
-    const handleKeyDown = (event) => {
-      const tc = transformControlsRef.current;
-      if (!tc || !tc.object) return;
-      
-      if (event.key === 'g' || event.key === 'G') {
-        event.preventDefault();
-        tc.setMode('translate');
-      } else if (event.key === 'r' || event.key === 'R') {
-        event.preventDefault();
-        tc.setMode('rotate');
-      } else if (event.key === 's' || event.key === 'S') {
-        event.preventDefault();
-        tc.setMode('scale');
-      } else if (event.key === 'Delete' || event.key === 'Backspace') {
-        event.preventDefault();
-        if (selected) {
-          tc.detach();
-          onSelect(null);
-          // Delete via the delete handler
-          setTimeout(() => {
-            onUpdateFurniture(selected.id, { _shouldDelete: true });
-          }, 10);
-        }
-      }
-    };
-    window.addEventListener('keydown', handleKeyDown);
-
-    // FIXED: Better lighting for smooth shadows
+    // Lighting
     scene.add(new THREE.AmbientLight(0xffffff, 0.6));
-    
-    const dirLight1 = new THREE.DirectionalLight(0xffffff, 0.6);
-    dirLight1.position.set(10, 20, 10);
-    dirLight1.castShadow = true;
-    // FIXED: Larger shadow map for smoother shadows
-    dirLight1.shadow.mapSize.width = 4096;  // Increased from 2048
-    dirLight1.shadow.mapSize.height = 4096; // Increased from 2048
-    dirLight1.shadow.camera.left = -50;
-    dirLight1.shadow.camera.right = 50;
-    dirLight1.shadow.camera.top = 50;
-    dirLight1.shadow.camera.bottom = -50;
-    dirLight1.shadow.camera.near = 0.5;
-    dirLight1.shadow.camera.far = 100;
-    dirLight1.shadow.bias = -0.0001; // Reduce shadow acne
-    dirLight1.shadow.radius = 4; // Blur shadow edges
-    scene.add(dirLight1);
+    const light = new THREE.DirectionalLight(0xffffff, 0.6);
+    light.position.set(10, 20, 10);
+    light.castShadow = true;
+    light.shadow.mapSize.width = 2048;
+    light.shadow.mapSize.height = 2048;
+    light.shadow.camera.left = -30;
+    light.shadow.camera.right = 30;
+    light.shadow.camera.top = 30;
+    light.shadow.camera.bottom = -30;
+    light.shadow.bias = -0.0001;
+    light.shadow.radius = 3;
+    scene.add(light);
 
-    const dirLight2 = new THREE.DirectionalLight(0xffffff, 0.3);
-    dirLight2.position.set(-10, 15, -10);
-    scene.add(dirLight2);
+    const light2 = new THREE.DirectionalLight(0xffffff, 0.3);
+    light2.position.set(-10, 15, -10);
+    scene.add(light2);
 
-    // Floor texture
+    // Floor texture function
     const createFloorTexture = (style, color) => {
       const canvas = document.createElement('canvas');
       canvas.width = 512;
@@ -227,118 +168,243 @@ const ThreeScene = ({ onSelect, selected, roomDimensions, furniture, onUpdateFur
       return texture;
     };
 
+    // FLOOR - horizontal plane at Y=0
     const floor = new THREE.Mesh(
       new THREE.PlaneGeometry(roomDimensions.width, roomDimensions.depth),
       new THREE.MeshStandardMaterial({ 
-        map: createFloorTexture(roomDimensions.floorStyle, roomDimensions.floorColor) 
+        map: createFloorTexture(roomDimensions.floorStyle || 'tiles', roomDimensions.floorColor || '#d4b896')
       })
     );
     floor.rotation.x = -Math.PI / 2;
     floor.receiveShadow = true;
     scene.add(floor);
 
-    // Walls
+    // INDIVIDUAL WALLS - each is a separate plane
     const wallMaterial = new THREE.MeshStandardMaterial({
       color: roomDimensions.wallColor || '#e8e8e8',
-      side: THREE.DoubleSide
+      side: THREE.FrontSide // Only show front face
     });
 
+    // Back wall (negative Z)
     const backWall = new THREE.Mesh(
       new THREE.PlaneGeometry(roomDimensions.width, roomDimensions.height),
       wallMaterial.clone()
     );
-    backWall.position.z = -roomDimensions.depth / 2;
-    backWall.position.y = roomDimensions.height / 2;
+    backWall.position.set(0, roomDimensions.height / 2, -roomDimensions.depth / 2);
+    backWall.rotation.y = 0; // Facing positive Z (towards camera)
+    backWall.receiveShadow = true;
     scene.add(backWall);
 
+    // Left wall (negative X)
     const leftWall = new THREE.Mesh(
       new THREE.PlaneGeometry(roomDimensions.depth, roomDimensions.height),
       wallMaterial.clone()
     );
-    leftWall.position.x = -roomDimensions.width / 2;
-    leftWall.position.y = roomDimensions.height / 2;
-    leftWall.rotation.y = Math.PI / 2;
+    leftWall.position.set(-roomDimensions.width / 2, roomDimensions.height / 2, 0);
+    leftWall.rotation.y = Math.PI / 2; // Facing positive X (towards camera)
+    leftWall.receiveShadow = true;
     scene.add(leftWall);
 
+    // Right wall (positive X)
     const rightWall = new THREE.Mesh(
       new THREE.PlaneGeometry(roomDimensions.depth, roomDimensions.height),
       wallMaterial.clone()
     );
-    rightWall.position.x = roomDimensions.width / 2;
-    rightWall.position.y = roomDimensions.height / 2;
-    rightWall.rotation.y = -Math.PI / 2;
+    rightWall.position.set(roomDimensions.width / 2, roomDimensions.height / 2, 0);
+    rightWall.rotation.y = -Math.PI / 2; // Facing negative X (towards camera)
+    rightWall.receiveShadow = true;
     scene.add(rightWall);
 
+    // Front wall (positive Z) - this one is usually hidden
     const frontWall = new THREE.Mesh(
       new THREE.PlaneGeometry(roomDimensions.width, roomDimensions.height),
       wallMaterial.clone()
     );
-    frontWall.position.z = roomDimensions.depth / 2;
-    frontWall.position.y = roomDimensions.height / 2;
-    frontWall.rotation.y = Math.PI;
+    frontWall.position.set(0, roomDimensions.height / 2, roomDimensions.depth / 2);
+    frontWall.rotation.y = Math.PI; // Facing negative Z (away from camera)
+    frontWall.receiveShadow = true;
     scene.add(frontWall);
 
+    // Ceiling
     const ceiling = new THREE.Mesh(
       new THREE.PlaneGeometry(roomDimensions.width, roomDimensions.depth),
       new THREE.MeshStandardMaterial({ 
         color: 0xf5f5f5, 
-        side: THREE.DoubleSide
+        side: THREE.FrontSide
       })
     );
-    ceiling.rotation.x = Math.PI / 2;
+    ceiling.rotation.x = Math.PI / 2; // Facing down
     ceiling.position.y = roomDimensions.height;
     scene.add(ceiling);
 
-    roomRef.current = { backWall, leftWall, rightWall, frontWall, ceiling, floor };
-    updateWallVisibility();
+    wallsRef.current = { backWall, leftWall, rightWall, frontWall, ceiling, floor };
 
-    // Mouse click to select
-    const raycaster = new THREE.Raycaster();
-    const mouse = new THREE.Vector2();
-    let clickStartTime = 0;
-
-    const onMouseDown = () => {
-      clickStartTime = Date.now();
+    // DOLLHOUSE VISIBILITY - hide walls when camera is outside them
+    const updateWallVisibility = () => {
+      const camPos = camera.position;
+      const halfWidth = roomDimensions.width / 2;
+      const halfDepth = roomDimensions.depth / 2;
+      
+      // Hide wall if camera is on the OUTSIDE of that wall
+      frontWall.visible = !(camPos.z > halfDepth);  // Hide if camera is past front wall
+      backWall.visible = !(camPos.z < -halfDepth);  // Hide if camera is past back wall
+      rightWall.visible = !(camPos.x > halfWidth);  // Hide if camera is past right wall
+      leftWall.visible = !(camPos.x < -halfWidth);  // Hide if camera is past left wall
+      ceiling.visible = !(camPos.y > roomDimensions.height); // Hide if camera above
     };
 
-    const onMouseUp = (event) => {
-      const clickDuration = Date.now() - clickStartTime;
-      if (clickDuration > 200) return; // Was a drag, not a click
-      
+    orbit.addEventListener('change', updateWallVisibility);
+    updateWallVisibility(); // Initial call
+
+    const loader = new GLTFLoader();
+
+    // Add asset with proper sizing
+    window.addAsset = (name) => {
+      loader.load(`/models/${name}.glb`, (gltf) => {
+        const model = gltf.scene;
+        model.name = name;
+
+        const box = new THREE.Box3().setFromObject(model);
+        const size = box.getSize(new THREE.Vector3());
+
+        const targetHeight = 1.0;
+        model.scale.setScalar(targetHeight / size.y);
+        
+        model.traverse(n => {
+          if (n.isMesh) {
+            n.castShadow = true;
+            n.receiveShadow = true;
+            n.material = n.material.clone();
+            n.material.flatShading = false;
+            n.material.needsUpdate = true;
+          }
+        });
+
+        const wrapper = new THREE.Group();
+        wrapper.add(model);
+        
+        box.setFromObject(model);
+        model.position.y = -box.min.y;
+
+        const safeWidth = roomDimensions.width * 0.4;
+        const safeDepth = roomDimensions.depth * 0.4;
+        wrapper.position.set(
+          (Math.random() - 0.5) * safeWidth,
+          0,
+          (Math.random() - 0.5) * safeDepth
+        );
+        
+        scene.add(wrapper);
+        furnitureList.current.push(wrapper);
+        
+        // Attach transform controls and highlight
+        transform.attach(wrapper);
+        transform.setMode('translate'); // Ensure we're in translate mode
+        
+        // Add blue glow to selected
+        wrapper.traverse(n => {
+          if (n.isMesh) {
+            n.material.emissive = new THREE.Color(0x4a9eff);
+            n.material.emissiveIntensity = 0.3;
+            n.material.needsUpdate = true;
+          }
+        });
+        
+        if(onSelect) onSelect({ name, id: wrapper.uuid });
+      });
+    };
+
+    window.changeColor = (hex) => {
+      if (transform.object) {
+        transform.object.traverse(n => {
+          if (n.isMesh) {
+            n.material.color.set(hex);
+            n.material.needsUpdate = true;
+          }
+        });
+      }
+    };
+
+    window.setMode = (mode) => {
+      console.log('Setting transform mode to:', mode);
+      transform.setMode(mode);
+    };
+    
+    window.deleteSelected = () => {
+      if (transform.object) {
+        const obj = transform.object;
+        transform.detach();
+        scene.remove(obj);
+        furnitureList.current = furnitureList.current.filter(i => i !== obj);
+        if(onSelect) onSelect(null);
+      }
+    };
+
+    // Selection
+    const raycaster = new THREE.Raycaster();
+    const mouse = new THREE.Vector2();
+
+    const onPointerDown = (event) => {
       const rect = renderer.domElement.getBoundingClientRect();
       mouse.x = ((event.clientX - rect.left) / rect.width) * 2 - 1;
       mouse.y = -((event.clientY - rect.top) / rect.height) * 2 + 1;
 
       raycaster.setFromCamera(mouse, camera);
-      const objects = Object.values(furnitureObjects.current);
-      const intersects = raycaster.intersectObjects(objects, true);
+      const intersects = raycaster.intersectObjects(furnitureList.current, true);
 
       if (intersects.length > 0) {
-        let obj = intersects[0].object;
-        while (obj.parent && !obj.userData.furnitureId) {
-          obj = obj.parent;
+        let target = intersects[0].object;
+        while (target.parent && !furnitureList.current.includes(target)) {
+          target = target.parent;
         }
-        if (obj.userData.furnitureId) {
-          const item = furniture.find(f => f.id === obj.userData.furnitureId);
-          console.log('Selected:', item);
-          onSelect(item);
-          transformControls.attach(obj);
-          transformControls.setMode('translate');
-        }
-      } else {
-        console.log('Deselected');
-        onSelect(null);
-        transformControls.detach();
+        
+        // Remove glow from all furniture first
+        furnitureList.current.forEach(item => {
+          item.traverse(n => {
+            if (n.isMesh) {
+              n.material.emissive = new THREE.Color(0x000000);
+              n.material.emissiveIntensity = 0;
+              n.material.needsUpdate = true;
+            }
+          });
+        });
+        
+        // Add glow to selected
+        target.traverse(n => {
+          if (n.isMesh) {
+            n.material.emissive = new THREE.Color(0x4a9eff);
+            n.material.emissiveIntensity = 0.3;
+            n.material.needsUpdate = true;
+          }
+        });
+        
+        // Attach transform controls
+        transform.attach(target);
+        transform.setMode('translate');
+        
+        if(onSelect) onSelect({ name: target.children[0].name, id: target.uuid });
+      } else if (!transform.dragging) {
+        // Deselect - remove all glows
+        furnitureList.current.forEach(item => {
+          item.traverse(n => {
+            if (n.isMesh) {
+              n.material.emissive = new THREE.Color(0x000000);
+              n.material.emissiveIntensity = 0;
+              n.material.needsUpdate = true;
+            }
+          });
+        });
+        
+        transform.detach();
+        if(onSelect) onSelect(null);
       }
     };
 
-    renderer.domElement.addEventListener('mousedown', onMouseDown);
-    renderer.domElement.addEventListener('mouseup', onMouseUp);
+    renderer.domElement.addEventListener("pointerdown", onPointerDown);
 
-    // Animation loop
     const animate = () => {
       requestAnimationFrame(animate);
-      orbitControls.update();
+      orbit.update();
       updateWallVisibility();
       renderer.render(scene, camera);
     };
@@ -349,255 +415,155 @@ const ThreeScene = ({ onSelect, selected, roomDimensions, furniture, onUpdateFur
       camera.updateProjectionMatrix();
       renderer.setSize(container.clientWidth, container.clientHeight);
     };
-    window.addEventListener('resize', handleResize);
+    window.addEventListener("resize", handleResize);
 
     return () => {
-      window.removeEventListener('resize', handleResize);
-      window.removeEventListener('keydown', handleKeyDown);
-      renderer.domElement.removeEventListener('mousedown', onMouseDown);
-      renderer.domElement.removeEventListener('mouseup', onMouseUp);
+      window.removeEventListener("resize", handleResize);
       renderer.dispose();
-      if (container.contains(renderer.domElement)) {
-        container.removeChild(renderer.domElement);
-      }
+      if(container.contains(renderer.domElement)) container.removeChild(renderer.domElement);
     };
-  }, []);
+  }, [onSelect]);
 
-  // Load furniture models - only when new items added
+  // Update room when dimensions change
   useEffect(() => {
-    if (!sceneRef.current) return;
+    if (wallsRef.current && sceneRef.current && cameraRef.current) {
+      const scene = sceneRef.current;
+      const walls = wallsRef.current;
 
-    const scene = sceneRef.current;
-    const loader = loaderRef.current;
+      scene.remove(walls.backWall);
+      scene.remove(walls.leftWall);
+      scene.remove(walls.rightWall);
+      scene.remove(walls.frontWall);
+      scene.remove(walls.ceiling);
+      scene.remove(walls.floor);
 
-    console.log('Furniture effect triggered. Count:', furniture.length);
-
-    // Remove deleted items
-    const currentIds = new Set(Object.keys(furnitureObjects.current));
-    const newIds = new Set(furniture.filter(f => !f._shouldDelete).map(f => f.id));
-
-    currentIds.forEach(id => {
-      if (!newIds.has(id)) {
-        console.log('Removing:', id);
-        const obj = furnitureObjects.current[id];
-        scene.remove(obj);
-        delete furnitureObjects.current[id];
-      }
-    });
-
-    // Load new items
-    furniture.forEach(item => {
-      if (item._shouldDelete) return;
-      if (furnitureObjects.current[item.id]) {
-        // Already loaded, just update transform
-        const obj = furnitureObjects.current[item.id];
-        if (!updateInProgress.current) {
-          obj.position.set(item.position.x, item.position.y || 0, item.position.z);
-          obj.rotation.y = (item.rotation || 0) * Math.PI / 180;
-          obj.scale.setScalar(item.scale || 1);
-          
-          // Update color
-          obj.traverse(child => {
-            if (child.isMesh && item.color) {
-              if (Array.isArray(child.material)) {
-                child.material.forEach(mat => mat.color.set(item.color));
-              } else {
-                child.material.color.set(item.color);
-              }
-            }
-          });
-        }
-        return;
-      }
-      
-      console.log('Loading new item:', item.type, item.id);
-      const modelPath = `/models/${item.type}.glb`;
-      
-      loader.load(
-        modelPath,
-        (gltf) => {
-          console.log('Model loaded:', item.type);
-          const model = gltf.scene;
-          
-          const wrapper = new THREE.Group();
-          wrapper.userData.furnitureId = item.id;
-          wrapper.add(model);
-
-          const box = new THREE.Box3().setFromObject(model);
-          const size = box.getSize(new THREE.Vector3());
-          
-          const targetHeight = 1.0;
-          const scale = targetHeight / size.y;
-          model.scale.setScalar(scale);
-
-          box.setFromObject(model);
-          model.position.y = -box.min.y;
-
-          wrapper.position.set(item.position.x, item.position.y || 0, item.position.z);
-          wrapper.rotation.y = (item.rotation || 0) * Math.PI / 180;
-          wrapper.scale.setScalar(item.scale || 1);
-
-          model.traverse(child => {
-            if (child.isMesh) {
-              child.castShadow = true;
-              child.receiveShadow = true;
-              if (item.color) {
-                if (Array.isArray(child.material)) {
-                  child.material.forEach(mat => mat.color.set(item.color));
-                } else {
-                  child.material.color.set(item.color);
-                }
-              }
-            }
-          });
-
-          scene.add(wrapper);
-          furnitureObjects.current[item.id] = wrapper;
-          console.log('Added to scene:', item.id);
-
-          if (selected && selected.id === item.id && transformControlsRef.current) {
-            console.log('Auto-attaching to:', item.id);
-            transformControlsRef.current.attach(wrapper);
+      const createFloorTexture = (style, color) => {
+        const canvas = document.createElement('canvas');
+        canvas.width = 512;
+        canvas.height = 512;
+        const ctx = canvas.getContext('2d');
+        ctx.fillStyle = color || '#d4b896';
+        ctx.fillRect(0, 0, 512, 512);
+        
+        if (style === 'tiles') {
+          const tileSize = 128;
+          ctx.strokeStyle = 'rgba(0,0,0,0.2)';
+          ctx.lineWidth = 4;
+          for (let i = 0; i <= 512; i += tileSize) {
+            ctx.beginPath();
+            ctx.moveTo(i, 0);
+            ctx.lineTo(i, 512);
+            ctx.stroke();
+            ctx.beginPath();
+            ctx.moveTo(0, i);
+            ctx.lineTo(512, i);
+            ctx.stroke();
           }
-        },
-        undefined,
-        (error) => {
-          console.error(`Failed to load ${modelPath}:`, error);
+        } else if (style === 'wood') {
+          for (let i = 0; i < 512; i += 30) {
+            ctx.strokeStyle = `rgba(0,0,0,${0.1 + Math.random() * 0.1})`;
+            ctx.lineWidth = 2;
+            ctx.beginPath();
+            ctx.moveTo(0, i);
+            ctx.lineTo(512, i);
+            ctx.stroke();
+          }
+        } else if (style === 'marble') {
+          for (let i = 0; i < 50; i++) {
+            ctx.strokeStyle = 'rgba(255,255,255,0.15)';
+            ctx.lineWidth = 2;
+            ctx.beginPath();
+            ctx.moveTo(Math.random() * 512, Math.random() * 512);
+            ctx.bezierCurveTo(
+              Math.random() * 512, Math.random() * 512,
+              Math.random() * 512, Math.random() * 512,
+              Math.random() * 512, Math.random() * 512
+            );
+            ctx.stroke();
+          }
+        } else if (style === 'carpet') {
+          const imageData = ctx.getImageData(0, 0, 512, 512);
+          for (let i = 0; i < imageData.data.length; i += 4) {
+            const noise = Math.random() * 20 - 10;
+            imageData.data[i] += noise;
+            imageData.data[i + 1] += noise;
+            imageData.data[i + 2] += noise;
+          }
+          ctx.putImageData(imageData, 0, 0);
         }
+        
+        const texture = new THREE.CanvasTexture(canvas);
+        texture.wrapS = THREE.RepeatWrapping;
+        texture.wrapT = THREE.RepeatWrapping;
+        texture.repeat.set(4, 4);
+        return texture;
+      };
+
+      const floor = new THREE.Mesh(
+        new THREE.PlaneGeometry(roomDimensions.width, roomDimensions.depth),
+        new THREE.MeshStandardMaterial({ 
+          map: createFloorTexture(roomDimensions.floorStyle || 'tiles', roomDimensions.floorColor || '#d4b896')
+        })
       );
-    });
-  }, [furniture, selected]);
+      floor.rotation.x = -Math.PI / 2;
+      floor.receiveShadow = true;
+      scene.add(floor);
 
-  // Update selection highlight
-  useEffect(() => {
-    Object.entries(furnitureObjects.current).forEach(([id, wrapper]) => {
-      const isSelected = selected?.id === id;
-      wrapper.traverse(child => {
-        if (child.isMesh) {
-          child.material.emissive = isSelected ? new THREE.Color(0x4a9eff) : new THREE.Color(0x000000);
-          child.material.emissiveIntensity = isSelected ? 0.4 : 0;
-        }
+      const wallMaterial = new THREE.MeshStandardMaterial({
+        color: roomDimensions.wallColor || '#e8e8e8',
+        side: THREE.FrontSide
       });
-    });
 
-    if (selected && furnitureObjects.current[selected.id] && transformControlsRef.current) {
-      transformControlsRef.current.attach(furnitureObjects.current[selected.id]);
-    } else if (!selected && transformControlsRef.current) {
-      transformControlsRef.current.detach();
+      const backWall = new THREE.Mesh(
+        new THREE.PlaneGeometry(roomDimensions.width, roomDimensions.height),
+        wallMaterial.clone()
+      );
+      backWall.position.set(0, roomDimensions.height / 2, -roomDimensions.depth / 2);
+      backWall.rotation.y = 0;
+      backWall.receiveShadow = true;
+      scene.add(backWall);
+
+      const leftWall = new THREE.Mesh(
+        new THREE.PlaneGeometry(roomDimensions.depth, roomDimensions.height),
+        wallMaterial.clone()
+      );
+      leftWall.position.set(-roomDimensions.width / 2, roomDimensions.height / 2, 0);
+      leftWall.rotation.y = Math.PI / 2;
+      leftWall.receiveShadow = true;
+      scene.add(leftWall);
+
+      const rightWall = new THREE.Mesh(
+        new THREE.PlaneGeometry(roomDimensions.depth, roomDimensions.height),
+        wallMaterial.clone()
+      );
+      rightWall.position.set(roomDimensions.width / 2, roomDimensions.height / 2, 0);
+      rightWall.rotation.y = -Math.PI / 2;
+      rightWall.receiveShadow = true;
+      scene.add(rightWall);
+
+      const frontWall = new THREE.Mesh(
+        new THREE.PlaneGeometry(roomDimensions.width, roomDimensions.height),
+        wallMaterial.clone()
+      );
+      frontWall.position.set(0, roomDimensions.height / 2, roomDimensions.depth / 2);
+      frontWall.rotation.y = Math.PI;
+      frontWall.receiveShadow = true;
+      scene.add(frontWall);
+
+      const ceiling = new THREE.Mesh(
+        new THREE.PlaneGeometry(roomDimensions.width, roomDimensions.depth),
+        new THREE.MeshStandardMaterial({ 
+          color: 0xf5f5f5, 
+          side: THREE.FrontSide
+        })
+      );
+      ceiling.rotation.x = Math.PI / 2;
+      ceiling.position.y = roomDimensions.height;
+      scene.add(ceiling);
+
+      wallsRef.current = { backWall, leftWall, rightWall, frontWall, ceiling, floor };
     }
-  }, [selected]);
-
-  // Update room
-  useEffect(() => {
-    if (!sceneRef.current || !roomRef.current) return;
-
-    const scene = sceneRef.current;
-    const { backWall, leftWall, rightWall, frontWall, ceiling, floor } = roomRef.current;
-
-    scene.remove(floor);
-    const createFloorTexture = (style, color) => {
-      const canvas = document.createElement('canvas');
-      canvas.width = 512;
-      canvas.height = 512;
-      const ctx = canvas.getContext('2d');
-      ctx.fillStyle = color || '#d4b896';
-      ctx.fillRect(0, 0, 512, 512);
-      
-      if (style === 'tiles') {
-        const tileSize = 128;
-        ctx.strokeStyle = 'rgba(0,0,0,0.2)';
-        ctx.lineWidth = 4;
-        for (let i = 0; i <= 512; i += tileSize) {
-          ctx.beginPath();
-          ctx.moveTo(i, 0);
-          ctx.lineTo(i, 512);
-          ctx.stroke();
-          ctx.beginPath();
-          ctx.moveTo(0, i);
-          ctx.lineTo(512, i);
-          ctx.stroke();
-        }
-      } else if (style === 'wood') {
-        for (let i = 0; i < 512; i += 30) {
-          ctx.strokeStyle = `rgba(0,0,0,${0.1 + Math.random() * 0.1})`;
-          ctx.lineWidth = 2;
-          ctx.beginPath();
-          ctx.moveTo(0, i);
-          ctx.lineTo(512, i);
-          ctx.stroke();
-        }
-      } else if (style === 'marble') {
-        for (let i = 0; i < 50; i++) {
-          ctx.strokeStyle = 'rgba(255,255,255,0.15)';
-          ctx.lineWidth = 2;
-          ctx.beginPath();
-          ctx.moveTo(Math.random() * 512, Math.random() * 512);
-          ctx.bezierCurveTo(
-            Math.random() * 512, Math.random() * 512,
-            Math.random() * 512, Math.random() * 512,
-            Math.random() * 512, Math.random() * 512
-          );
-          ctx.stroke();
-        }
-      } else if (style === 'carpet') {
-        const imageData = ctx.getImageData(0, 0, 512, 512);
-        for (let i = 0; i < imageData.data.length; i += 4) {
-          const noise = Math.random() * 20 - 10;
-          imageData.data[i] += noise;
-          imageData.data[i + 1] += noise;
-          imageData.data[i + 2] += noise;
-        }
-        ctx.putImageData(imageData, 0, 0);
-      }
-      
-      const texture = new THREE.CanvasTexture(canvas);
-      texture.wrapS = THREE.RepeatWrapping;
-      texture.wrapT = THREE.RepeatWrapping;
-      texture.repeat.set(4, 4);
-      return texture;
-    };
-
-    const newFloor = new THREE.Mesh(
-      new THREE.PlaneGeometry(roomDimensions.width, roomDimensions.depth),
-      new THREE.MeshStandardMaterial({ 
-        map: createFloorTexture(roomDimensions.floorStyle, roomDimensions.floorColor) 
-      })
-    );
-    newFloor.rotation.x = -Math.PI / 2;
-    newFloor.receiveShadow = true;
-    scene.add(newFloor);
-    roomRef.current.floor = newFloor;
-
-    const wallMaterial = new THREE.MeshStandardMaterial({
-      color: roomDimensions.wallColor || '#e8e8e8',
-      side: THREE.DoubleSide
-    });
-
-    [backWall, leftWall, rightWall, frontWall].forEach(wall => {
-      wall.material = wallMaterial.clone();
-    });
-
-    backWall.geometry = new THREE.PlaneGeometry(roomDimensions.width, roomDimensions.height);
-    backWall.position.z = -roomDimensions.depth / 2;
-    backWall.position.y = roomDimensions.height / 2;
-
-    leftWall.geometry = new THREE.PlaneGeometry(roomDimensions.depth, roomDimensions.height);
-    leftWall.position.x = -roomDimensions.width / 2;
-    leftWall.position.y = roomDimensions.height / 2;
-
-    rightWall.geometry = new THREE.PlaneGeometry(roomDimensions.depth, roomDimensions.height);
-    rightWall.position.x = roomDimensions.width / 2;
-    rightWall.position.y = roomDimensions.height / 2;
-
-    frontWall.geometry = new THREE.PlaneGeometry(roomDimensions.width, roomDimensions.height);
-    frontWall.position.z = roomDimensions.depth / 2;
-    frontWall.position.y = roomDimensions.height / 2;
-
-    ceiling.geometry = new THREE.PlaneGeometry(roomDimensions.width, roomDimensions.depth);
-    ceiling.position.y = roomDimensions.height;
-
-    updateWallVisibility();
-  }, [roomDimensions, updateWallVisibility]);
+  }, [roomDimensions]);
 
   return <div ref={mountRef} style={{ width: "100%", height: "100%" }} />;
 };
