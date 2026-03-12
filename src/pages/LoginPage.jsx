@@ -125,7 +125,7 @@ const LoginPage = ({ onLogin }) => {
         </div>
       </div>
 
-      {/* Background Decorative Glows */}
+      
       <div className="absolute top-0 left-0 w-[500px] h-[500px] bg-emerald-600/10 blur-[150px] pointer-events-none" />
       <div className="absolute bottom-0 right-0 w-[500px] h-[500px] bg-emerald-600/10 blur-[150px] pointer-events-none" />
     </div>
