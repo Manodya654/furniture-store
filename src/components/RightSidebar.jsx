@@ -2,7 +2,6 @@ const RightSidebar = ({ selected }) => {
   return (
     <aside style={sideStyle}>
       <div style={headerStyle}>
-        <div style={headerIconBoxStyle}>⚙️</div>
         <h3 style={headingStyle}>Properties</h3>
       </div>
 
@@ -40,34 +39,11 @@ const RightSidebar = ({ selected }) => {
             <div style={hintStyle}>Click to select color</div>
           </div>
 
-          {/* Transform Guide */}
-          <div style={controlCardStyle}>
-            <div style={cardHeaderStyle}>
-              <span style={cardIconStyle}>🎯</span>
-              <span>Transform</span>
-            </div>
-            <div style={instructionsStyle}>
-              <div style={instructionItemStyle}>
-                <kbd style={kbdStyle}>G</kbd>
-                <span>Move</span>
-              </div>
-              <div style={instructionItemStyle}>
-                <kbd style={kbdStyle}>R</kbd>
-                <span>Rotate</span>
-              </div>
-              <div style={instructionItemStyle}>
-                <kbd style={kbdStyle}>S</kbd>
-                <span>Scale</span>
-              </div>
-            </div>
-          </div>
-
           {/* Delete Button */}
           <button 
             onClick={() => window.deleteSelected()} 
             style={deleteBtnStyle}
           >
-            <span style={{fontSize: '20px'}}>🗑️</span>
             <span>Delete Item</span>
           </button>
         </div>
@@ -130,8 +106,8 @@ const contentStyle = {
 
 const infoCardStyle = {
   background: 'linear-gradient(135deg, #10b981 0%, #059669 100%)',
-  padding: '18px',
-  borderRadius: '12px',
+  padding: '12px',
+  borderRadius: '10px',
   boxShadow: '0 2px 12px rgba(16, 185, 129, 0.3)'
 };
 
@@ -142,14 +118,14 @@ const itemHeaderStyle = {
 };
 
 const itemIconStyle = {
-  width: '50px',
-  height: '50px',
+  width: '40px',
+  height: '40px',
   background: 'rgba(255, 255, 255, 0.2)',
   borderRadius: '10px',
   display: 'flex',
   alignItems: 'center',
   justifyContent: 'center',
-  fontSize: '28px'
+  fontSize: '20px'
 };
 
 const itemTitleStyle = {

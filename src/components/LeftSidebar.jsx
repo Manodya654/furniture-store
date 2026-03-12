@@ -4,7 +4,7 @@ const LeftSidebar = ({ roomDimensions, onRoomChange }) => {
       {/* Room Setup Section */}
       <div style={sectionStyle}>
         <h3 style={headingStyle}>
-          <span style={iconStyle}>🏠</span> ROOM SETUP
+          ROOM SETUP
         </h3>
         
         <div style={gridStyle}>
@@ -16,7 +16,7 @@ const LeftSidebar = ({ roomDimensions, onRoomChange }) => {
               max="20" 
               step="0.5"
               value={roomDimensions.width}
-              onChange={(e) => onRoomChange({ ...roomDimensions, width: parseFloat(e.target.value) || 6 })}
+              onChange={(e) => onRoomChange({ ...roomDimensions, width: parseFloat(e.target.value) || 7 })}
               style={inputStyle}
             />
             <span style={unitStyle}>m</span>
@@ -30,7 +30,7 @@ const LeftSidebar = ({ roomDimensions, onRoomChange }) => {
               max="6" 
               step="0.5"
               value={roomDimensions.height}
-              onChange={(e) => onRoomChange({ ...roomDimensions, height: parseFloat(e.target.value) || 3 })}
+              onChange={(e) => onRoomChange({ ...roomDimensions, height: parseFloat(e.target.value) || 2.5 })}
               style={inputStyle}
             />
             <span style={unitStyle}>m</span>
@@ -44,7 +44,7 @@ const LeftSidebar = ({ roomDimensions, onRoomChange }) => {
               max="20" 
               step="0.5"
               value={roomDimensions.depth}
-              onChange={(e) => onRoomChange({ ...roomDimensions, depth: parseFloat(e.target.value) || 5 })}
+              onChange={(e) => onRoomChange({ ...roomDimensions, depth: parseFloat(e.target.value) || 9 })}
               style={inputStyle}
             />
             <span style={unitStyle}>m</span>
@@ -87,60 +87,31 @@ const LeftSidebar = ({ roomDimensions, onRoomChange }) => {
         </div>
       </div>
 
-      <div style={dividerStyle}></div>
 
       {/* Furniture Grid */}
+      <label style={labelStyle}>Floor Style</label>
       <div style={furnitureGridStyle}>
         <button onClick={() => window.addAsset('chair')} style={assetBtnStyle}>
-          <span style={btnIconStyle}>🪑</span>
           <span>Chair</span>
         </button>
         <button onClick={() => window.addAsset('table')} style={assetBtnStyle}>
-          <span style={btnIconStyle}>🪵</span>
           <span>Table</span>
         </button>
         <button onClick={() => window.addAsset('sofa')} style={assetBtnStyle}>
-          <span style={btnIconStyle}>🛋️</span>
           <span>Sofa</span>
         </button>
         <button onClick={() => window.addAsset('bed')} style={assetBtnStyle}>
-          <span style={btnIconStyle}>🛏️</span>
           <span>Bed</span>
         </button>
         <button onClick={() => window.addAsset('desk')} style={assetBtnStyle}>
-          <span style={btnIconStyle}>🗄️</span>
           <span>Desk</span>
         </button>
         <button onClick={() => window.addAsset('lamp')} style={assetBtnStyle}>
-          <span style={btnIconStyle}>💡</span>
           <span>Lamp</span>
         </button>
       </div>
 
       <div style={dividerStyle}></div>
-
-      {/* Transform Tools */}
-      <div style={sectionStyle}>
-        <h3 style={headingStyle}>
-          <span style={iconStyle}>🎯</span> TRANSFORM TOOLS
-        </h3>
-        
-        <button onClick={() => window.setMode('translate')} style={transformBtnStyle}>
-          <span style={transformIconStyle}>↔️</span>
-          <span style={transformTextStyle}>Move</span>
-          <kbd style={kbdStyle}>G</kbd>
-        </button>
-        <button onClick={() => window.setMode('rotate')} style={transformBtnStyle}>
-          <span style={transformIconStyle}>🔄</span>
-          <span style={transformTextStyle}>Rotate</span>
-          <kbd style={kbdStyle}>R</kbd>
-        </button>
-        <button onClick={() => window.setMode('scale')} style={transformBtnStyle}>
-          <span style={transformIconStyle}>📏</span>
-          <span style={transformTextStyle}>Scale</span>
-          <kbd style={kbdStyle}>S</kbd>
-        </button>
-      </div>
     </aside>
   );
 };
@@ -160,11 +131,10 @@ const sectionStyle = {
 
 const headingStyle = {
   margin: '0 0 18px 0',
-  fontSize: '11px',
+  fontSize: '14px',
   fontWeight: '700',
   color: '#fff',
   textTransform: 'uppercase',
-  letterSpacing: '1.5px',
   display: 'flex',
   alignItems: 'center',
   gap: '10px'
@@ -254,13 +224,13 @@ const furnitureGridStyle = {
 };
 
 const assetBtnStyle = {
-  padding: '18px 10px',
+  padding: '14px 8px',
   cursor: 'pointer',
   background: 'linear-gradient(135deg, #10b981 0%, #059669 100%)',
   color: 'white',
   border: 'none',
-  borderRadius: '12px',
-  fontSize: '13px',
+  borderRadius: '10px',
+  fontSize: '12px',
   fontWeight: '600',
   display: 'flex',
   flexDirection: 'column',
