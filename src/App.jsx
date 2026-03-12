@@ -149,7 +149,7 @@ function App() {
               padding: '4px 8px'
             }}
           >
-            ← Back
+            ⬅️
           </button>
           <h2 style={{
             margin: 0, 
@@ -208,7 +208,7 @@ function App() {
               onClick={() => setViewMode('3d')} 
               style={{
                 padding: '8px 16px', 
-                background: viewMode === '3d' ? '#4a9eff' : 'transparent', 
+                background: viewMode === '3d' ? 'oklch(0.76 0.18 163.22)' : 'transparent', 
                 color: 'white', 
                 border: 'none', 
                 borderRadius: '6px', 
