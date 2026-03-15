@@ -2,37 +2,29 @@ import React from 'react';
 
 const Navbar = ({ onStartDesign, onOpenGallery, onLogout }) => {
   return (
-    <nav className="w-full bg-slate-950/70 backdrop-blur-xl border-b border-white/5 px-8 py-4 flex justify-between items-center sticky top-0 z-[100] shadow-2xl transition-all duration-300">
-      {/* Logo Section */}
-      <div className="flex items-center gap-3 group cursor-pointer">
-        <div className="w-10 h-10 bg-emerald-500/20 rounded-xl flex items-center justify-center border border-emerald-500/30 group-hover:rotate-[360deg] transition-all duration-700">
-          <span className="text-xl">🏠</span>
+    <nav className="relative z-50 flex items-center justify-between px-10 py-6 max-w-7xl mx-auto">
+      <div className="flex items-center gap-2">
+        <div className="w-10 h-10 bg-emerald-500 rounded-xl flex items-center justify-center shadow-lg shadow-emerald-500/20">
+          <span className="text-xl">📐</span>
         </div>
-        <span className="text-xl font-black tracking-tighter text-white uppercase">
-          Studio<span className="text-emerald-500">Pro</span>
-        </span>
-      </div>
-      
-      {/* Desktop Links */}
-      <div className="hidden md:flex items-center gap-10 text-[10px] font-black uppercase tracking-[3px]">
-        <button onClick={onStartDesign} className="text-slate-400 hover:text-emerald-400 transition-all relative group">
-          Designer
-          <span className="absolute -bottom-1 left-0 w-0 h-[2px] bg-emerald-500 transition-all group-hover:w-full"></span>
-        </button>
-        <button onClick={onOpenGallery} className="text-slate-400 hover:text-emerald-400 transition-all relative group">
-          Gallery
-          <span className="absolute -bottom-1 left-0 w-0 h-[2px] bg-emerald-500 transition-all group-hover:w-full"></span>
-        </button>
-        <button className="text-slate-700 cursor-not-allowed">Projects</button>
+        <span className="text-xl font-black tracking-tighter text-white uppercase">Studio Pro</span>
       </div>
 
-      {/* Logout Action */}
-      <button 
-        onClick={onLogout}
-        className="bg-emerald-500/10 hover:bg-red-500/20 text-emerald-500 hover:text-red-400 px-6 py-2.5 rounded-2xl border border-emerald-500/20 hover:border-red-500/20 text-[10px] font-black uppercase tracking-widest transition-all active:scale-95"
-      >
-        Logout
-      </button>
+      <div className="flex items-center gap-8">
+        <button onClick={onOpenGallery} className="text-[10px] font-bold uppercase tracking-[3px] text-slate-400 hover:text-emerald-400 transition-colors">Gallery</button>
+        <button onClick={onStartDesign} className="text-[10px] font-bold uppercase tracking-[3px] text-slate-400 hover:text-emerald-400 transition-colors">Editor</button>
+        
+        {/* Logout වෙනුවට Login බොත්තම */}
+        <button 
+          onClick={onLogout}
+          className="bg-emerald-600/10 hover:bg-emerald-600 border border-emerald-500/20 px-6 py-2.5 rounded-xl text-[10px] font-black uppercase tracking-[3px] text-emerald-400 hover:text-white transition-all flex items-center gap-2"
+        >
+          <span>Login</span>
+          <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="3" d="M11 16l4-4m0 0l-4-4m4 4H3m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
+          </svg>
+        </button>
+      </div>
     </nav>
   );
 };

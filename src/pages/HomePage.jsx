@@ -3,7 +3,7 @@ import Navbar from '../components/Navbar';
 
 const HomePage = ({ onStartDesign, onOpenGallery, onLogout }) => {
   
-  // පින්තූර නොපෙනෙන ප්‍රශ්නය විසඳීමට වඩාත් ස්ථාවර Unsplash Source links භාවිතා කර ඇත
+  
   const furnitureAssets = [
     { name: 'Modern Sofa', icon: '🛋️', info: 'Luxury Velvet Fabric', id: 'sofa', img: 'https://images.unsplash.com/photo-1555041469-a586c61ea9bc?auto=format&fit=crop&q=80&w=600' },
     { name: 'Wooden Bed', icon: '🛏️', info: 'Oak Wood Frame', id: 'bed', img: 'https://images.unsplash.com/photo-1505693419148-9330f54cd2e3?auto=format&fit=crop&q=80&w=600' },
@@ -61,7 +61,7 @@ const HomePage = ({ onStartDesign, onOpenGallery, onLogout }) => {
           </div>
         </div>
 
-        {/* Statistics Section - HCI Marks සඳහා අලුතින් එකතු කරන ලදී */}
+        
         <div className="grid grid-cols-2 md:grid-cols-4 gap-8 mb-24 px-10">
           {[
             { label: '3D Assets', val: '500+' },
