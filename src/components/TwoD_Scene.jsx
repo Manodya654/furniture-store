@@ -18,7 +18,7 @@ const TwoD_Scene = ({ onSelect, selected, roomDimensions, furniture, onUpdateFur
     return sizes[type] || { width: 1, depth: 1 };
   };
 
-  // RESTORED: Your original pattern logic
+// pattern logic
   const getFloorPattern = (ctx, style, color) => {
     const patternCanvas = document.createElement('canvas');
     const patternCtx = patternCanvas.getContext('2d');
@@ -84,7 +84,7 @@ const TwoD_Scene = ({ onSelect, selected, roomDimensions, furniture, onUpdateFur
     ctx.lineWidth = 8;
     ctx.strokeRect(floorX, floorY, floorWidth, floorDepth);
 
-    // RESTORED: Dimension Labels
+    // Dimension Labels
     ctx.fillStyle = '#4a9eff';
     ctx.font = 'bold 12px sans-serif';
     ctx.textAlign = 'center';
@@ -113,7 +113,7 @@ const TwoD_Scene = ({ onSelect, selected, roomDimensions, furniture, onUpdateFur
         ctx.strokeRect(-itemWidth / 2, -itemDepth / 2, itemWidth, itemDepth);
       }
 
-      // RESTORED: Emojis
+      // Emojis
       ctx.font = '16px sans-serif';
       const icons = { chair: '🪑', table: '🪵', sofa: ' Couch', bed: '🛏️', desk: '🗄️' };
       ctx.fillText(icons[item.type] || '📦', 0, 5);
@@ -121,7 +121,7 @@ const TwoD_Scene = ({ onSelect, selected, roomDimensions, furniture, onUpdateFur
     });
   };
 
-  // FIX: Proper container-aware resizing
+  // Proper container-aware resizing
   useEffect(() => {
     const handleResize = () => {
       const canvas = canvasRef.current;
