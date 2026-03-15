@@ -16,7 +16,7 @@ const HomePage = ({ onStartDesign, onOpenGallery, onLogout }) => {
     <div className="min-h-screen w-full bg-[#020617] text-slate-200 font-sans selection:bg-emerald-500/30">
       <Navbar onStartDesign={onStartDesign} onOpenGallery={onOpenGallery} onLogout={onLogout} />
 
-      {/* Decorative Blur Elements - තවත් වැඩි දියුණු කර ඇත */}
+      
       <div className="fixed top-0 right-0 w-[600px] h-[600px] bg-emerald-600/10 blur-[150px] rounded-full -mr-32 -mt-32 pointer-events-none z-0" />
       <div className="fixed bottom-0 left-0 w-[400px] h-[400px] bg-blue-600/5 blur-[120px] rounded-full -ml-20 -mb-20 pointer-events-none z-0" />
 
