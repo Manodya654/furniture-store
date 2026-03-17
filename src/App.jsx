@@ -10,7 +10,8 @@ import HomePage from "./pages/HomePage";
 import GalleryPage from "./pages/GalleryPage";
 
 function App() {
-  const [currentPage, setCurrentPage] = useState('login');
+  
+  const [currentPage, setCurrentPage] = useState('home'); 
   const [viewMode, setViewMode] = useState('3d');
   const [selected, setSelected] = useState(null);
   const [furniture, setFurniture] = useState([]);
@@ -26,30 +27,23 @@ function App() {
     floorColor: '#d4b896'
   });
 
+  // --- Functions ---
   const handleAddFurniture = (item) => {
-    console.log('Adding furniture:', item);
     setFurniture(prev => [...prev, item]);
   };
 
   const handleUpdateFurniture = (id, updates) => {
-    console.log('Updating furniture:', id, updates);
-    
-    // Handle delete signal
     if (updates._shouldDelete) {
-      console.log('Deleting furniture:', id);
       setFurniture(prev => prev.filter(item => item.id !== id));
       if (selected?.id === id) setSelected(null);
       return;
     }
-    
-    // Normal update
     setFurniture(prev => prev.map(item => 
       item.id === id ? { ...item, ...updates } : item
     ));
   };
 
   const handleDeleteFurniture = (id) => {
-    console.log('Delete furniture called:', id);
     setFurniture(prev => prev.filter(item => item.id !== id));
     if (selected?.id === id) setSelected(null);
   };
@@ -84,27 +78,26 @@ function App() {
     setSelected(null);
     setCurrentDesignName('Untitled Design');
     setRoomDimensions({
-      width: 6, 
-      height: 3, 
-      depth: 5, 
-      wallColor: '#e8e8e8', 
-      floorStyle: 'tiles', 
-      floorColor: '#d4b896'
+      width: 6, height: 3, depth: 5, wallColor: '#e8e8e8', floorStyle: 'tiles', floorColor: '#d4b896'
     });
   };
 
-  if (currentPage === 'login') {
-    return <LoginPage onLogin={() => setCurrentPage('home')} />;
-  }
+  // --- View Logic (Navigation) ---
 
+  // 1. ආරම්භක පිටුව (Initial Page)
   if (currentPage === 'home') {
     return (
       <HomePage 
-        onStartDesign={() => setCurrentPage('designer')} // Designer එකට යන function එක
-        onOpenGallery={() => setCurrentPage('gallery')}  // Gallery එකට යන අලුත් function එක
-        onLogout={() => setCurrentPage('login')} 
+        onStartDesign={() => setCurrentPage('designer')} 
+        onOpenGallery={() => setCurrentPage('gallery')}  
+        onLogout={() => setCurrentPage('login')} // 2. මෙතැනින් Login පිටුවට යයි
       />
     );
+  }
+
+  // 3. Login වූ පසු කෙලින්ම Designer එකට යාම
+  if (currentPage === 'login') {
+    return <LoginPage onLogin={() => setCurrentPage('designer')} />;
   }
 
   if (currentPage === 'gallery') {
@@ -116,6 +109,7 @@ function App() {
     );
   }
 
+  // 4. ප්‍රධාන Designer View
   return (
     <div style={{ 
       display: "flex", 
@@ -139,67 +133,36 @@ function App() {
       }}>
         <div style={{display: 'flex', alignItems: 'center', gap: '12px'}}>
           <button
-            onClick={() => setCurrentPage('gallery')}
-            style={{
-              background: 'transparent',
-              border: 'none',
-              color: '#4a9eff',
-              cursor: 'pointer',
-              fontSize: '20px',
-              padding: '4px 8px'
-            }}
+            onClick={() => setCurrentPage('home')} // Dashboard වෙත යාමට
+            style={{ background: 'transparent', border: 'none', color: '#4a9eff', cursor: 'pointer', fontSize: '20px' }}
           >
             ⬅️
           </button>
           <h2 style={{
-            margin: 0, 
-            fontSize: '20px', 
-            fontWeight: '700',
+            margin: 0, fontSize: '20px', fontWeight: '700',
             background: 'linear-gradient(135deg, #4a9eff 0%, #67b8ff 100%)',
-            WebkitBackgroundClip: 'text',
-            WebkitTextFillColor: 'transparent',
-            backgroundClip: 'text'
+            WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent'
           }}>
             Furniture Studio Pro
           </h2>
-          <span style={{ 
-            fontSize: '14px', 
-            color: '#888', 
-            marginLeft: '20px' 
-          }}>
+          <span style={{ fontSize: '14px', color: '#888', marginLeft: '20px' }}>
             {currentDesignName}
           </span>
         </div>
 
         <div style={{display: 'flex', gap: '10px', alignItems: 'center'}}>
           <DesignManager
-            onSave={handleSaveDesign}
-            onLoad={handleLoadDesign}
-            onDelete={handleDeleteDesign}
-            onNew={handleNewDesign}
-            savedDesigns={savedDesigns}
-            currentName={currentDesignName}
+            onSave={handleSaveDesign} onLoad={handleLoadDesign}
+            onDelete={handleDeleteDesign} onNew={handleNewDesign}
+            savedDesigns={savedDesigns} currentName={currentDesignName}
           />
           
-          <div style={{ 
-            background: '#222', 
-            borderRadius: '8px', 
-            padding: '4px', 
-            display: 'flex', 
-            gap: '4px' 
-          }}>
+          <div style={{ background: '#222', borderRadius: '8px', padding: '4px', display: 'flex', gap: '4px' }}>
             <button 
               onClick={() => setViewMode('2d')} 
               style={{
-                padding: '8px 16px', 
-                background: viewMode === '2d' ? '#4a9eff' : 'transparent', 
-                color: 'white', 
-                border: 'none', 
-                borderRadius: '6px', 
-                cursor: 'pointer', 
-                fontSize: '13px', 
-                fontWeight: '600',
-                transition: 'all 0.2s'
+                padding: '8px 16px', borderRadius: '6px', cursor: 'pointer', fontSize: '13px',
+                background: viewMode === '2d' ? '#4a9eff' : 'transparent', color: 'white', border: 'none'
               }}
             >
               2D View
@@ -207,15 +170,8 @@ function App() {
             <button 
               onClick={() => setViewMode('3d')} 
               style={{
-                padding: '8px 16px', 
-                background: viewMode === '3d' ? 'oklch(0.76 0.18 163.22)' : 'transparent', 
-                color: 'white', 
-                border: 'none', 
-                borderRadius: '6px', 
-                cursor: 'pointer', 
-                fontSize: '13px', 
-                fontWeight: '600',
-                transition: 'all 0.2s'
+                padding: '8px 16px', borderRadius: '6px', cursor: 'pointer', fontSize: '13px',
+                background: viewMode === '3d' ? 'oklch(0.76 0.18 163.22)' : 'transparent', color: 'white', border: 'none'
               }}
             >
               3D View
@@ -234,18 +190,14 @@ function App() {
         <main style={{ flex: 1, position: "relative", background: '#0a0a0a' }}>
           {viewMode === '3d' ? (
             <ThreeScene 
-              onSelect={setSelected}
-              selected={selected}
-              roomDimensions={roomDimensions}
-              furniture={furniture}
+              onSelect={setSelected} selected={selected}
+              roomDimensions={roomDimensions} furniture={furniture}
               onUpdateFurniture={handleUpdateFurniture}
             />
           ) : (
             <TwoD_Scene
-              onSelect={setSelected}
-              selected={selected}
-              roomDimensions={roomDimensions}
-              furniture={furniture}
+              onSelect={setSelected} selected={selected}
+              roomDimensions={roomDimensions} furniture={furniture}
               onUpdateFurniture={handleUpdateFurniture}
             />
           )}

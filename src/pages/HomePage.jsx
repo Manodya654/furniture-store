@@ -3,7 +3,7 @@ import Navbar from '../components/Navbar';
 
 const HomePage = ({ onStartDesign, onOpenGallery, onLogout }) => {
   
-  // පින්තූර නොපෙනෙන ප්‍රශ්නය විසඳීමට වඩාත් ස්ථාවර Unsplash Source links භාවිතා කර ඇත
+  
   const furnitureAssets = [
     { name: 'Modern Sofa', icon: '🛋️', info: 'Luxury Velvet Fabric', id: 'sofa', img: 'https://images.unsplash.com/photo-1555041469-a586c61ea9bc?auto=format&fit=crop&q=80&w=600' },
     { name: 'Wooden Bed', icon: '🛏️', info: 'Oak Wood Frame', id: 'bed', img: 'https://images.unsplash.com/photo-1505693419148-9330f54cd2e3?auto=format&fit=crop&q=80&w=600' },
@@ -16,7 +16,7 @@ const HomePage = ({ onStartDesign, onOpenGallery, onLogout }) => {
     <div className="min-h-screen w-full bg-[#020617] text-slate-200 font-sans selection:bg-emerald-500/30">
       <Navbar onStartDesign={onStartDesign} onOpenGallery={onOpenGallery} onLogout={onLogout} />
 
-      {/* Decorative Blur Elements - තවත් වැඩි දියුණු කර ඇත */}
+      
       <div className="fixed top-0 right-0 w-[600px] h-[600px] bg-emerald-600/10 blur-[150px] rounded-full -mr-32 -mt-32 pointer-events-none z-0" />
       <div className="fixed bottom-0 left-0 w-[400px] h-[400px] bg-blue-600/5 blur-[120px] rounded-full -ml-20 -mb-20 pointer-events-none z-0" />
 
@@ -61,7 +61,7 @@ const HomePage = ({ onStartDesign, onOpenGallery, onLogout }) => {
           </div>
         </div>
 
-        {/* Statistics Section - HCI Marks සඳහා අලුතින් එකතු කරන ලදී */}
+        
         <div className="grid grid-cols-2 md:grid-cols-4 gap-8 mb-24 px-10">
           {[
             { label: '3D Assets', val: '500+' },
