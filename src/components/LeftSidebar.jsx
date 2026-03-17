@@ -1,11 +1,25 @@
-const LeftSidebar = ({ roomDimensions, onRoomChange }) => {
+const LeftSidebar = ({ roomDimensions, onRoomChange, onAddFurniture }) => {
+  
+  const addFurnitureItem = (type) => {
+    const newItem = {
+      id: `${type}_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
+      type,
+      position: {
+        x: (Math.random() - 0.5) * roomDimensions.width * 0.6,
+        y: 0,
+        z: (Math.random() - 0.5) * roomDimensions.depth * 0.6
+      },
+      rotation: 0,
+      scale: 1,
+      color: '#8B7355'
+    };
+    onAddFurniture(newItem);
+  };
+
   return (
     <aside style={sideStyle}>
-      {/* Room Setup Section */}
       <div style={sectionStyle}>
-        <h3 style={headingStyle}>
-          ROOM SETUP
-        </h3>
+        <h3 style={headingStyle}>ROOM SETUP</h3>
         
         <div style={gridStyle}>
           <div style={controlStyle}>
@@ -16,7 +30,7 @@ const LeftSidebar = ({ roomDimensions, onRoomChange }) => {
               max="20" 
               step="0.5"
               value={roomDimensions.width}
-              onChange={(e) => onRoomChange({ ...roomDimensions, width: parseFloat(e.target.value) || 7 })}
+              onChange={(e) => onRoomChange({ ...roomDimensions, width: parseFloat(e.target.value) || 6 })}
               style={inputStyle}
             />
             <span style={unitStyle}>m</span>
@@ -30,7 +44,7 @@ const LeftSidebar = ({ roomDimensions, onRoomChange }) => {
               max="6" 
               step="0.5"
               value={roomDimensions.height}
-              onChange={(e) => onRoomChange({ ...roomDimensions, height: parseFloat(e.target.value) || 2.5 })}
+              onChange={(e) => onRoomChange({ ...roomDimensions, height: parseFloat(e.target.value) || 3 })}
               style={inputStyle}
             />
             <span style={unitStyle}>m</span>
@@ -44,7 +58,7 @@ const LeftSidebar = ({ roomDimensions, onRoomChange }) => {
               max="20" 
               step="0.5"
               value={roomDimensions.depth}
-              onChange={(e) => onRoomChange({ ...roomDimensions, depth: parseFloat(e.target.value) || 9 })}
+              onChange={(e) => onRoomChange({ ...roomDimensions, depth: parseFloat(e.target.value) || 5 })}
               style={inputStyle}
             />
             <span style={unitStyle}>m</span>
@@ -87,31 +101,29 @@ const LeftSidebar = ({ roomDimensions, onRoomChange }) => {
         </div>
       </div>
 
+      <div style={dividerStyle}></div>
 
-      {/* Furniture Grid */}
-      <label style={labelStyle}>Floor Style</label>
+      <label style={{...labelStyle, padding: '0 20px', marginTop: '10px'}}>FURNITURE LIBRARY</label>
       <div style={furnitureGridStyle}>
-        <button onClick={() => window.addAsset('chair')} style={assetBtnStyle}>
+        <button onClick={() => addFurnitureItem('chair')} style={assetBtnStyle}>
           <span>Chair</span>
         </button>
-        <button onClick={() => window.addAsset('table')} style={assetBtnStyle}>
+        <button onClick={() => addFurnitureItem('table')} style={assetBtnStyle}>
           <span>Table</span>
         </button>
-        <button onClick={() => window.addAsset('sofa')} style={assetBtnStyle}>
+        <button onClick={() => addFurnitureItem('sofa')} style={assetBtnStyle}>
           <span>Sofa</span>
         </button>
-        <button onClick={() => window.addAsset('bed')} style={assetBtnStyle}>
+        <button onClick={() => addFurnitureItem('bed')} style={assetBtnStyle}>
           <span>Bed</span>
         </button>
-        <button onClick={() => window.addAsset('desk')} style={assetBtnStyle}>
+        <button onClick={() => addFurnitureItem('desk')} style={assetBtnStyle}>
           <span>Desk</span>
         </button>
-        <button onClick={() => window.addAsset('lamp')} style={assetBtnStyle}>
+        <button onClick={() => addFurnitureItem('lamp')} style={assetBtnStyle}>
           <span>Lamp</span>
         </button>
       </div>
-
-      <div style={dividerStyle}></div>
     </aside>
   );
 };
@@ -134,20 +146,13 @@ const headingStyle = {
   fontSize: '14px',
   fontWeight: '700',
   color: '#fff',
-  textTransform: 'uppercase',
-  display: 'flex',
-  alignItems: 'center',
-  gap: '10px'
-};
-
-const iconStyle = {
-  fontSize: '16px'
+  textTransform: 'uppercase'
 };
 
 const dividerStyle = {
   height: '1px',
   background: '#1a1a1a',
-  margin: '0'
+  margin: '10px 0'
 };
 
 const gridStyle = {
@@ -233,52 +238,10 @@ const assetBtnStyle = {
   fontSize: '12px',
   fontWeight: '600',
   display: 'flex',
-  flexDirection: 'column',
   alignItems: 'center',
-  gap: '8px',
+  justifyContent: 'center',
   transition: 'transform 0.1s ease',
   boxShadow: '0 2px 8px rgba(16, 185, 129, 0.3)'
-};
-
-const btnIconStyle = {
-  fontSize: '32px'
-};
-
-const transformBtnStyle = {
-  width: '100%',
-  padding: '12px 14px',
-  marginBottom: '10px',
-  cursor: 'pointer',
-  background: '#0a0a0a',
-  color: '#fff',
-  border: '1px solid #2a2a2a',
-  borderRadius: '8px',
-  fontSize: '13px',
-  fontWeight: '600',
-  display: 'flex',
-  alignItems: 'center',
-  gap: '10px',
-  transition: 'background 0.2s ease'
-};
-
-const transformIconStyle = {
-  fontSize: '18px'
-};
-
-const transformTextStyle = {
-  flex: 1,
-  textAlign: 'left'
-};
-
-const kbdStyle = {
-  background: '#1a1a1a',
-  padding: '4px 10px',
-  borderRadius: '6px',
-  fontSize: '11px',
-  fontWeight: 'bold',
-  border: '1px solid #2a2a2a',
-  color: '#10b981',
-  fontFamily: 'monospace'
 };
 
 export default LeftSidebar;
