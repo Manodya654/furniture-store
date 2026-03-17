@@ -9,7 +9,7 @@ const LoginPage = ({ onLogin }) => {
     key: ''
   });
 
-  // HCI Principle: Error Prevention
+  
   const handleInputChange = (e) => {
     const { name, value } = e.target;
     setCredentials(prev => ({ ...prev, [name]: value }));
@@ -19,7 +19,7 @@ const LoginPage = ({ onLogin }) => {
   const handleSubmit = (e) => {
     e.preventDefault();
     
-    // HCI: Visibility of system status - Validation feedback
+    
     if (!credentials.id || !credentials.key) {
       setError('Required: Security credentials cannot be empty.');
       return;
@@ -27,11 +27,11 @@ const LoginPage = ({ onLogin }) => {
 
     setLoading(true);
     
-    // Simulation of Advanced Authentication (Commercial quality logic)
+   
     setTimeout(() => {
       setLoading(false);
       
-      // Real-world ID format check (Example: ID-XXXXX)
+      
       const idPattern = /^ID-\d{3,}$/;
       
       if (!idPattern.test(credentials.id)) {
@@ -39,7 +39,7 @@ const LoginPage = ({ onLogin }) => {
       } else if (credentials.key.length < 6) {
         setError('Security Key must be at least 6 characters for high-level access.');
       } else {
-        // Professional approach: Success session handling
+       
         localStorage.setItem('session_active', 'true');
         localStorage.setItem('user_identity', credentials.id);
         onLogin();
@@ -50,7 +50,7 @@ const LoginPage = ({ onLogin }) => {
   return (
     <div className="relative min-h-screen w-full flex items-center justify-center overflow-hidden font-sans bg-[#020617]">
       
-      {/* Background Section (Unchanged as requested) */}
+      
       <div className="absolute inset-0 z-0">
         <img 
           src="https://images.unsplash.com/photo-1618221195710-dd6b41faaea6?q=80&w=2000&auto=format&fit=crop" 
@@ -63,7 +63,7 @@ const LoginPage = ({ onLogin }) => {
 
       <div className="relative z-10 w-full max-w-[900px] mx-4 grid grid-cols-1 md:grid-cols-2 bg-slate-900/40 backdrop-blur-3xl rounded-[40px] border border-white/10 overflow-hidden shadow-2xl">
         
-        {/* Left Side: Brand Context */}
+      
         <div className="relative hidden md:flex flex-col justify-end p-10 min-h-[500px] overflow-hidden group">
           <img 
             src="https://images.unsplash.com/photo-1618221195710-dd6b41faaea6?q=80&w=2000&auto=format&fit=crop"  
@@ -85,7 +85,7 @@ const LoginPage = ({ onLogin }) => {
           </div>
         </div>
 
-        {/* Right Side: Advanced Interactive Form */}
+        
         <div className="p-10 md:p-14 flex flex-col justify-center bg-slate-950/30">
           <header className="mb-10 text-center md:text-left">
             <div className="inline-flex items-center justify-center w-14 h-14 bg-emerald-500/10 rounded-2xl mb-6 border border-emerald-500/20 shadow-inner">
@@ -96,7 +96,7 @@ const LoginPage = ({ onLogin }) => {
           </header>
 
           <form onSubmit={handleSubmit} className="space-y-6">
-            {/* HCI: Error Message Display - Animated for better visibility */}
+            
             {error && (
               <div className="bg-red-500/10 border border-red-500/20 p-3 rounded-xl flex items-center gap-3 animate-[shake_0.5s_ease-in-out]">
                 <span className="text-red-400 text-[11px] font-bold uppercase tracking-wider">⚠️ {error}</span>
@@ -130,7 +130,7 @@ const LoginPage = ({ onLogin }) => {
                   className="w-full bg-slate-900/50 border border-slate-800 p-4 rounded-2xl focus:ring-2 focus:ring-emerald-500/40 focus:border-emerald-500 outline-none transition-all text-white text-sm placeholder:text-slate-700 pr-12"
                   placeholder="••••••••"
                 />
-                {/* HCI: User Control - Toggle Visibility */}
+              
                 <button 
                   type="button"
                   onClick={() => setShowPassword(!showPassword)}
