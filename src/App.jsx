@@ -160,7 +160,7 @@ function App() {
             WebkitTextFillColor: 'transparent',
             backgroundClip: 'text'
           }}>
-            Furniture Studio Pro
+            Furniture Studio
           </h2>
           <span style={{ 
             fontSize: '14px', 
