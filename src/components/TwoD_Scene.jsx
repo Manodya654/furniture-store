@@ -130,66 +130,182 @@ const TwoD_Scene = ({ furniture, onUpdateFurniture, onSelect, selected, roomDime
       const isSelected = selected?.id === item.id;
       const baseColor = item.color || getFurnitureColor(item.type);
       
-      // Draw furniture shapes (matching 3D representations)
+      // Draw realistic top-down furniture views
       if (item.type === 'chair') {
+        // Chair seat
         ctx.fillStyle = baseColor;
-        ctx.fillRect(-itemWidth / 2, -itemDepth / 2, itemWidth, itemDepth);
-        // Backrest
-        ctx.fillRect(-itemWidth / 2, -itemDepth / 2 - 6, itemWidth, 6);
+        const seatW = itemWidth * 0.8;
+        const seatD = itemDepth * 0.6;
+        ctx.fillRect(-seatW / 2, -seatD / 2, seatW, seatD);
+        
+        // Chair back
+        ctx.fillStyle = lightenColor(baseColor, -10);
+        ctx.fillRect(-seatW / 2, -itemDepth / 2, seatW, itemDepth * 0.15);
+        
+        // Chair legs (4 circles)
+        ctx.fillStyle = lightenColor(baseColor, -20);
+        const legSize = 4;
+        ctx.beginPath();
+        ctx.arc(-seatW / 2 + legSize, -seatD / 2 + legSize, legSize, 0, Math.PI * 2);
+        ctx.arc(seatW / 2 - legSize, -seatD / 2 + legSize, legSize, 0, Math.PI * 2);
+        ctx.arc(-seatW / 2 + legSize, seatD / 2 - legSize, legSize, 0, Math.PI * 2);
+        ctx.arc(seatW / 2 - legSize, seatD / 2 - legSize, legSize, 0, Math.PI * 2);
+        ctx.fill();
+        
       } else if (item.type === 'table') {
+        // Table top with wood grain effect
         ctx.fillStyle = baseColor;
         ctx.fillRect(-itemWidth / 2, -itemDepth / 2, itemWidth, itemDepth);
-        ctx.strokeStyle = 'rgba(0,0,0,0.3)';
-        ctx.lineWidth = 2;
-        ctx.strokeRect(-itemWidth / 2, -itemDepth / 2, itemWidth, itemDepth);
-      } else if (item.type === 'sofa') {
-        ctx.fillStyle = baseColor;
-        ctx.fillRect(-itemWidth / 2, -itemDepth / 2, itemWidth, itemDepth);
-        // Cushions
-        const cushionW = itemWidth / 3;
-        ctx.fillStyle = lightenColor(baseColor, 20);
-        for (let i = 0; i < 3; i++) {
-          ctx.fillRect(-itemWidth / 2 + i * cushionW + 4, -itemDepth / 2 + 4, cushionW - 8, itemDepth - 8);
+        
+        // Wood grain lines
+        ctx.strokeStyle = 'rgba(0,0,0,0.15)';
+        ctx.lineWidth = 1;
+        for (let i = -itemWidth / 2; i < itemWidth / 2; i += 8) {
+          ctx.beginPath();
+          ctx.moveTo(i, -itemDepth / 2);
+          ctx.lineTo(i, itemDepth / 2);
+          ctx.stroke();
         }
-      } else if (item.type === 'bed') {
+        
+        // Table edge shadow
+        ctx.strokeStyle = 'rgba(0,0,0,0.3)';
+        ctx.lineWidth = 3;
+        ctx.strokeRect(-itemWidth / 2, -itemDepth / 2, itemWidth, itemDepth);
+        
+        // Table legs
+        ctx.fillStyle = lightenColor(baseColor, -25);
+        const legW = 6;
+        ctx.fillRect(-itemWidth / 2 + 5, -itemDepth / 2 + 5, legW, legW);
+        ctx.fillRect(itemWidth / 2 - 5 - legW, -itemDepth / 2 + 5, legW, legW);
+        ctx.fillRect(-itemWidth / 2 + 5, itemDepth / 2 - 5 - legW, legW, legW);
+        ctx.fillRect(itemWidth / 2 - 5 - legW, itemDepth / 2 - 5 - legW, legW, legW);
+        
+      } else if (item.type === 'sofa') {
+        // Sofa base
         ctx.fillStyle = baseColor;
         ctx.fillRect(-itemWidth / 2, -itemDepth / 2, itemWidth, itemDepth);
-        // Pillow area
-        ctx.fillStyle = lightenColor(baseColor, 30);
-        ctx.fillRect(-itemWidth / 2 + 4, -itemDepth / 2 + 4, itemWidth - 8, itemDepth / 4);
-      } else if (item.type === 'desk') {
-        ctx.fillStyle = baseColor;
-        ctx.fillRect(-itemWidth / 2, -itemDepth / 2, itemWidth, itemDepth);
+        
+        // 3 seat cushions with gaps
+        const cushionW = (itemWidth - 16) / 3;
         ctx.fillStyle = lightenColor(baseColor, 15);
-        ctx.fillRect(-itemWidth / 2 + 3, -itemDepth / 2 + 3, itemWidth - 6, itemDepth - 6);
-      } else if (item.type === 'lamp') {
+        for (let i = 0; i < 3; i++) {
+          const cushionX = -itemWidth / 2 + 8 + i * (cushionW + 4);
+          ctx.fillRect(cushionX, -itemDepth / 2 + 8, cushionW, itemDepth * 0.5);
+        }
+        
+        // Backrest cushions
+        ctx.fillStyle = lightenColor(baseColor, 10);
+        for (let i = 0; i < 3; i++) {
+          const cushionX = -itemWidth / 2 + 8 + i * (cushionW + 4);
+          ctx.fillRect(cushionX, itemDepth / 2 - itemDepth * 0.35, cushionW, itemDepth * 0.3);
+        }
+        
+        // Armrests
+        ctx.fillStyle = lightenColor(baseColor, -10);
+        ctx.fillRect(-itemWidth / 2, -itemDepth / 2, 8, itemDepth);
+        ctx.fillRect(itemWidth / 2 - 8, -itemDepth / 2, 8, itemDepth);
+        
+      } else if (item.type === 'bed') {
+        // Bed frame
+        ctx.fillStyle = lightenColor(baseColor, -15);
+        ctx.fillRect(-itemWidth / 2, -itemDepth / 2, itemWidth, itemDepth);
+        
+        // Mattress (slightly smaller)
         ctx.fillStyle = baseColor;
+        ctx.fillRect(-itemWidth / 2 + 4, -itemDepth / 2 + 4, itemWidth - 8, itemDepth - 8);
+        
+        // Pillow area (quilted pattern)
+        ctx.fillStyle = lightenColor(baseColor, 25);
+        const pillowH = itemDepth * 0.25;
+        ctx.fillRect(-itemWidth / 2 + 10, -itemDepth / 2 + 10, itemWidth - 20, pillowH);
+        
+        // Quilted diamond pattern
+        ctx.strokeStyle = 'rgba(255,255,255,0.3)';
+        ctx.lineWidth = 1;
+        const quiltSize = 15;
+        for (let qx = -itemWidth / 2 + 10; qx < itemWidth / 2 - 10; qx += quiltSize) {
+          for (let qy = -itemDepth / 2 + 10; qy < itemDepth / 2 - 10; qy += quiltSize) {
+            ctx.beginPath();
+            ctx.moveTo(qx, qy);
+            ctx.lineTo(qx + quiltSize / 2, qy + quiltSize / 2);
+            ctx.lineTo(qx, qy + quiltSize);
+            ctx.lineTo(qx - quiltSize / 2, qy + quiltSize / 2);
+            ctx.closePath();
+            ctx.stroke();
+          }
+        }
+        
+      } else if (item.type === 'desk') {
+        // Desk surface
+        ctx.fillStyle = baseColor;
+        ctx.fillRect(-itemWidth / 2, -itemDepth / 2, itemWidth, itemDepth);
+        
+        // Desk top highlight
+        ctx.fillStyle = lightenColor(baseColor, 20);
+        ctx.fillRect(-itemWidth / 2 + 5, -itemDepth / 2 + 5, itemWidth - 10, itemDepth - 10);
+        
+        // Drawer sections on one side
+        ctx.fillStyle = lightenColor(baseColor, -10);
+        const drawerW = itemWidth * 0.25;
+        const drawerH = itemDepth * 0.2;
+        ctx.fillRect(-itemWidth / 2 + 5, -itemDepth / 2 + 5, drawerW, drawerH);
+        ctx.fillRect(-itemWidth / 2 + 5, -itemDepth / 2 + 5 + drawerH + 3, drawerW, drawerH);
+        ctx.fillRect(-itemWidth / 2 + 5, itemDepth / 2 - 5 - drawerH, drawerW, drawerH);
+        
+        // Drawer handles
+        ctx.fillStyle = '#333';
+        ctx.fillRect(-itemWidth / 2 + drawerW / 2 - 3, -itemDepth / 2 + 5 + drawerH / 2 - 1, 6, 2);
+        ctx.fillRect(-itemWidth / 2 + drawerW / 2 - 3, -itemDepth / 2 + 5 + drawerH + 3 + drawerH / 2 - 1, 6, 2);
+        ctx.fillRect(-itemWidth / 2 + drawerW / 2 - 3, itemDepth / 2 - 5 - drawerH / 2 - 1, 6, 2);
+        
+      } else if (item.type === 'lamp') {
+        // Lamp base (circle)
+        ctx.fillStyle = lightenColor(baseColor, -20);
         ctx.beginPath();
         ctx.arc(0, 0, itemWidth / 2, 0, Math.PI * 2);
         ctx.fill();
-        ctx.fillStyle = 'rgba(255, 215, 0, 0.3)';
+        
+        // Lamp shade (smaller circle on top)
+        ctx.fillStyle = baseColor;
         ctx.beginPath();
-        ctx.arc(0, 0, itemWidth / 2 + 5, 0, Math.PI * 2);
+        ctx.arc(0, 0, itemWidth / 3, 0, Math.PI * 2);
         ctx.fill();
+        
+        // Light glow effect
+        const gradient = ctx.createRadialGradient(0, 0, itemWidth / 4, 0, 0, itemWidth / 2 + 10);
+        gradient.addColorStop(0, 'rgba(255, 215, 0, 0.6)');
+        gradient.addColorStop(1, 'rgba(255, 215, 0, 0)');
+        ctx.fillStyle = gradient;
+        ctx.beginPath();
+        ctx.arc(0, 0, itemWidth / 2 + 10, 0, Math.PI * 2);
+        ctx.fill();
+        
       } else {
+        // Fallback for unknown types
         ctx.fillStyle = baseColor;
         ctx.fillRect(-itemWidth / 2, -itemDepth / 2, itemWidth, itemDepth);
       }
       
-      // Selection outline (dashed blue line, no box fill)
+      // Selection outline (dashed blue line)
       if (isSelected) {
         ctx.strokeStyle = '#4a9eff';
         ctx.lineWidth = 3;
         ctx.setLineDash([8, 4]);
         ctx.strokeRect(-itemWidth / 2 - 6, -itemDepth / 2 - 6, itemWidth + 12, itemDepth + 12);
         ctx.setLineDash([]);
+        
+        // Selection glow
+        ctx.shadowColor = 'rgba(74, 158, 255, 0.4)';
+        ctx.shadowBlur = 10;
+        ctx.strokeRect(-itemWidth / 2 - 6, -itemDepth / 2 - 6, itemWidth + 12, itemDepth + 12);
+        ctx.shadowBlur = 0;
       }
 
-      // Label
-      ctx.fillStyle = isSelected ? '#4a9eff' : '#ffffff';
-      ctx.font = 'bold 10px sans-serif';
+      // Small type label (bottom)
+      ctx.fillStyle = isSelected ? '#4a9eff' : '#999';
+      ctx.font = 'bold 9px sans-serif';
       ctx.textAlign = 'center';
-      ctx.fillText(item.type.toUpperCase(), 0, itemDepth / 2 + 16);
+      ctx.fillText(item.type.toUpperCase(), 0, itemDepth / 2 + 14);
       
       ctx.restore();
     });
