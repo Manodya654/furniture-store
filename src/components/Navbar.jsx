@@ -14,7 +14,7 @@ const Navbar = ({ onStartDesign, onOpenGallery, onLogout }) => {
         <button onClick={onOpenGallery} className="text-[10px] font-bold uppercase tracking-[3px] text-slate-400 hover:text-emerald-400 transition-colors">Gallery</button>
         <button onClick={onStartDesign} className="text-[10px] font-bold uppercase tracking-[3px] text-slate-400 hover:text-emerald-400 transition-colors">Editor</button>
         
-        {/* Logout වෙනුවට Login බොත්තම */}
+       
         <button 
           onClick={onLogout}
           className="bg-emerald-600/10 hover:bg-emerald-600 border border-emerald-500/20 px-6 py-2.5 rounded-xl text-[10px] font-black uppercase tracking-[3px] text-emerald-400 hover:text-white transition-all flex items-center gap-2"

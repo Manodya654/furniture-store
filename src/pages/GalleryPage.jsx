@@ -2,7 +2,7 @@ import React, { useState, Suspense } from 'react';
 import { Canvas } from '@react-three/fiber';
 import { OrbitControls, Environment, ContactShadows, Float, PresentationControls } from '@react-three/drei';
 
-// පවතින 3D Placeholder එක තවත් ඔපමට්ටම් කර ඇත
+
 const FurniturePlaceholder3D = ({ type }) => {
   return (
     <PresentationControls global config={{ mass: 2, tension: 500 }} snap={{ mass: 4, tension: 1500 }} rotation={[0, 0.3, 0]} polar={[-Math.PI / 3, Math.PI / 3]} azim={[-Math.PI / 1.4, Math.PI / 1.4]}>
@@ -51,7 +51,6 @@ const GalleryPage = ({ onSelectModel, onBack }) => {
   return (
     <div className="min-h-screen bg-[#020617] text-white p-6 md:p-12 font-sans selection:bg-emerald-500/30">
       
-      {/* Header with Navigation - HCI Feedback */}
       <header className="max-w-7xl mx-auto flex flex-col md:flex-row justify-between items-start md:items-center mb-16 border-b border-white/5 pb-10 gap-6">
         <div>
           <button onClick={onBack} className="group flex items-center gap-3 text-emerald-500 font-black text-[10px] uppercase tracking-[3px] mb-4 hover:text-emerald-400 transition-all">
@@ -61,7 +60,7 @@ const GalleryPage = ({ onSelectModel, onBack }) => {
           <h1 className="text-5xl font-black tracking-tighter">Interactive <span className="text-emerald-500">Assets.</span></h1>
         </div>
         
-        {/* Modern Filter Tabs */}
+       
         <div className="flex flex-wrap gap-2 bg-slate-900/50 p-2 rounded-[24px] border border-white/5">
           {categories.map(cat => (
             <button
@@ -79,7 +78,7 @@ const GalleryPage = ({ onSelectModel, onBack }) => {
         </div>
       </header>
 
-      {/* Gallery Grid - HCI: Visibility & Consistency */}
+      
       <div className="max-w-7xl mx-auto grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-10">
         {filteredItems.map(item => {
           const mode = viewModes[item.id] || 'default';
@@ -87,20 +86,20 @@ const GalleryPage = ({ onSelectModel, onBack }) => {
           return (
             <div key={item.id} className="group bg-slate-900/40 border border-white/5 rounded-[48px] p-8 flex flex-col justify-between hover:bg-slate-900/60 transition-all duration-500 shadow-2xl relative overflow-hidden">
               
-              {/* Feature Badge */}
+              
               <div className="absolute top-6 left-6 z-20 bg-emerald-500/10 backdrop-blur-md px-3 py-1 rounded-full border border-emerald-500/20 text-[8px] font-black text-emerald-400 uppercase tracking-widest">
                 {item.category}
               </div>
 
-              {/* Advanced Viewport Area */}
+             
               <div className="relative h-72 rounded-[36px] mb-8 overflow-hidden bg-black/40 border border-white/5 shadow-inner group/viewport">
                 
-                {/* 1. Real Image View */}
+                
                 {mode === 'default' && (
                   <img src={item.img} alt={item.name} className="w-full h-full object-cover animate-in fade-in zoom-in-110 duration-1000" />
                 )}
 
-                {/* 2. Interactive 3D View - Improved Lighting */}
+               
                 {mode === '3d' && (
                   <div className="w-full h-full cursor-grab active:cursor-grabbing">
                     <Canvas camera={{ position: [0, 2, 5], fov: 40 }}>
@@ -116,7 +115,7 @@ const GalleryPage = ({ onSelectModel, onBack }) => {
                   </div>
                 )}
 
-                {/* 3. 2D Blueprint View - More Scientific */}
+                
                 {mode === '2d' && (
                   <div className="absolute inset-0 bg-[#0a0f1d] flex items-center justify-center p-12 animate-in zoom-in-95 duration-500">
                     <div className="absolute inset-0 opacity-10" style={{ backgroundImage: 'linear-gradient(#10b981 1px, transparent 1px), linear-gradient(90deg, #10b981 1px, transparent 1px)', backgroundSize: '25px 25px' }} />
@@ -132,7 +131,7 @@ const GalleryPage = ({ onSelectModel, onBack }) => {
                   </div>
                 )}
                 
-                {/* Controls Overlay */}
+               
                 <div className="absolute bottom-4 right-4 z-20 flex gap-2">
                    <div className="bg-black/60 backdrop-blur-md px-4 py-2 rounded-xl text-[8px] font-black uppercase tracking-[2px] text-slate-300 border border-white/5">
                     {mode === '3d' ? 'Interactive 3D' : mode === '2d' ? 'Blueprint Mode' : 'Product Photo'}
@@ -140,7 +139,7 @@ const GalleryPage = ({ onSelectModel, onBack }) => {
                 </div>
               </div>
 
-              {/* Content Section */}
+             
               <div className="space-y-6">
                 <div>
                   <h3 className="text-3xl font-black text-white leading-none">{item.name}</h3>
@@ -151,7 +150,7 @@ const GalleryPage = ({ onSelectModel, onBack }) => {
                   </div>
                 </div>
 
-                {/* Switcher - HCI: Consistency & Efficiency */}
+   
                 <div className="flex gap-2 p-1.5 bg-black/40 rounded-[22px] border border-white/5">
                   {['default', '3d', '2d'].map(v => (
                     <button 
