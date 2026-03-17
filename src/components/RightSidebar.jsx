@@ -182,7 +182,7 @@ const RightSidebar = ({ selected, onUpdateFurniture, onDeleteFurniture }) => {
         onMouseEnter={(e) => e.target.style.transform = 'scale(1.02)'}
         onMouseLeave={(e) => e.target.style.transform = 'scale(1)'}
       >
-         Delete Item
+       Delete Item
       </button>
     </aside>
   );
