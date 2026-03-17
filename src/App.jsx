@@ -9,7 +9,7 @@ import HomePage from "./pages/HomePage";
 import GalleryPage from "./pages/GalleryPage";
 
 function App() {
-  // පද්ධතිය Refresh වූ විට අවසානයට සිටි පිටුව මතක තබා ගනී
+  
   const [currentPage, setCurrentPage] = useState(() => {
     return localStorage.getItem("active_view") || 'home';
   });
@@ -22,12 +22,12 @@ function App() {
     wallColor: '#e8e8e8', floorStyle: 'tiles', floorColor: '#d4b896'
   });
 
-  // පිටුව මාරු වන විට එය localStorage හි Save කරයි
+  
   useEffect(() => {
     localStorage.setItem("active_view", currentPage);
   }, [currentPage]);
 
-  // --- View Navigation ---
+  
   if (currentPage === 'home') {
     return (
       <HomePage 
