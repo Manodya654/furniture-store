@@ -1,263 +1,191 @@
-const RightSidebar = ({ selected }) => {
+const RightSidebar = ({ selected, onUpdateFurniture, onDeleteFurniture }) => {
+  if (!selected) {
+    return (
+      <aside style={{
+        width: '260px',
+        background: 'linear-gradient(180deg, #111 0%, #0a0a0a 100%)',
+        borderLeft: '1px solid #222',
+        padding: '20px 16px',
+        flexShrink: 0,
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center'
+      }}>
+        <p style={{ color: '#555', fontSize: '13px', textAlign: 'center' }}>
+          Click on a furniture item to see its properties
+        </p>
+      </aside>
+    );
+  }
+
+  const icons = {
+    chair: '🪑', table: '🪵', sofa: '🛋️', bed: '🛏️', desk: '🗄️', lamp: '💡'
+  };
+
+  const labelStyle = {
+    fontSize: '11px',
+    color: '#888',
+    textTransform: 'uppercase',
+    letterSpacing: '1px',
+    marginBottom: '6px',
+    display: 'block',
+    fontWeight: '600',
+  };
+
+  const inputStyle = {
+    width: '100%',
+    background: '#1a1a2e',
+    border: '1px solid #333',
+    color: 'white',
+    padding: '8px 10px',
+    borderRadius: '6px',
+    fontSize: '13px',
+    boxSizing: 'border-box',
+    outline: 'none',
+  };
+
   return (
-    <aside style={sideStyle}>
-      <div style={headerStyle}>
-        <h3 style={headingStyle}>Properties</h3>
+    <aside style={{
+      width: '260px',
+      background: 'linear-gradient(180deg, #111 0%, #0a0a0a 100%)',
+      borderLeft: '1px solid #222',
+      padding: '20px 16px',
+      flexShrink: 0,
+      overflowY: 'auto',
+      display: 'flex',
+      flexDirection: 'column',
+      gap: '16px'
+    }}>
+      <h3 style={{ margin: 0, fontSize: '14px', fontWeight: '700', color: '#fff' }}>Properties</h3>
+
+      {/* Item Info */}
+      <div style={{
+        background: 'linear-gradient(135deg, #1a8a5c 0%, #15704a 100%)',
+        borderRadius: '10px',
+        padding: '14px',
+        display: 'flex',
+        alignItems: 'center',
+        gap: '12px'
+      }}>
+        <span style={{ fontSize: '28px' }}>{icons[selected.type] || '📦'}</span>
+        <div>
+          <div style={{ fontWeight: '700', fontSize: '16px', textTransform: 'capitalize' }}>
+            {selected.type || selected.name}
+          </div>
+          <div style={{ fontSize: '11px', color: 'rgba(255,255,255,0.6)' }}>
+            ID: {selected.id?.substring(0, 8)}
+          </div>
+        </div>
       </div>
 
-      {selected ? (
-        <div style={contentStyle}>
-          {/* Selected Item Info */}
-          <div style={infoCardStyle}>
-            <div style={itemHeaderStyle}>
-              <div style={itemIconStyle}>
-                {selected.name === 'chair' && '🪑'}
-                {selected.name === 'table' && '🪵'}
-                {selected.name === 'sofa' && '🛋️'}
-                {selected.name === 'bed' && '🛏️'}
-                {selected.name === 'desk' && '🗄️'}
-                {selected.name === 'lamp' && '💡'}
-              </div>
-              <div>
-                <div style={itemTitleStyle}>{selected.name}</div>
-                <div style={itemIdStyle}>ID: {selected.id.substring(0, 8)}</div>
-              </div>
-            </div>
-          </div>
+      {/* Color */}
+      <div>
+        <label style={labelStyle}>🎨 COLOR</label>
+        <input
+          type="color"
+          value={selected.color || '#8B7355'}
+          onChange={(e) => onUpdateFurniture(selected.id, { color: e.target.value })}
+          style={{ ...inputStyle, padding: '4px', height: '45px', cursor: 'pointer' }}
+        />
+        <span style={{ fontSize: '10px', color: '#555', marginTop: '4px', display: 'block' }}>
+          Click to select color
+        </span>
+      </div>
 
-          {/* Color Control */}
-          <div style={controlCardStyle}>
-            <div style={cardHeaderStyle}>
-              <span style={cardIconStyle}>🎨</span>
-              <span>Color</span>
+      {/* Position */}
+      <div>
+        <label style={labelStyle}>📍 POSITION</label>
+        <div style={{ display: 'flex', gap: '6px' }}>
+          {['x', 'z'].map(axis => (
+            <div key={axis} style={{ flex: 1 }}>
+              <label style={{ fontSize: '10px', color: '#666' }}>{axis.toUpperCase()}</label>
+              <input
+                type="number"
+                value={(selected.position?.[axis] || 0).toFixed(2)}
+                onChange={(e) => {
+                  const val = parseFloat(e.target.value) || 0;
+                  onUpdateFurniture(selected.id, {
+                    position: {
+                      ...selected.position,
+                      [axis]: val
+                    }
+                  });
+                }}
+                style={inputStyle}
+                step={0.1}
+              />
             </div>
-            <input 
-              type="color" 
-              onChange={(e) => window.changeColor(e.target.value)} 
-              style={colorPickerStyle}
-            />
-            <div style={hintStyle}>Click to select color</div>
-          </div>
+          ))}
+        </div>
+      </div>
 
-          {/* Delete Button */}
-          <button 
-            onClick={() => window.deleteSelected()} 
-            style={deleteBtnStyle}
-          >
-            <span>Delete Item</span>
-          </button>
+      {/* Rotation */}
+      <div>
+        <label style={labelStyle}>🔄 ROTATION</label>
+        <input
+          type="range"
+          min={0}
+          max={360}
+          value={selected.rotation || 0}
+          onChange={(e) => onUpdateFurniture(selected.id, { rotation: parseFloat(e.target.value) })}
+          style={{ width: '100%', accentColor: '#4a9eff' }}
+        />
+        <span style={{ fontSize: '11px', color: '#666' }}>{Math.round(selected.rotation || 0)}°</span>
+      </div>
+
+      {/* Transform Mode Buttons (for 3D) */}
+      <div>
+        <label style={labelStyle}>🛠️ TRANSFORM MODE</label>
+        <div style={{ display: 'flex', gap: '6px' }}>
+          {['translate', 'rotate', 'scale'].map(mode => (
+            <button
+              key={mode}
+              onClick={() => window.setMode && window.setMode(mode)}
+              style={{
+                flex: 1,
+                padding: '8px',
+                background: '#222',
+                color: '#fff',
+                border: '1px solid #333',
+                borderRadius: '6px',
+                cursor: 'pointer',
+                fontSize: '11px',
+                textTransform: 'capitalize',
+                transition: 'all 0.2s'
+              }}
+              onMouseEnter={(e) => e.target.style.background = '#4a9eff'}
+              onMouseLeave={(e) => e.target.style.background = '#222'}
+            >
+              {mode === 'translate' ? '↕️' : mode === 'rotate' ? '🔄' : '📏'} {mode}
+            </button>
+          ))}
         </div>
-      ) : (
-        <div style={emptyStateStyle}>
-          <div style={emptyIconStyle}>👆</div>
-          <div style={emptyTitleStyle}>No Selection</div>
-          <div style={emptyTextStyle}>
-            Click on furniture in the scene to view and edit its properties
-          </div>
-        </div>
-      )}
+      </div>
+
+      {/* Spacer */}
+      <div style={{ flex: 1 }} />
+
+      {/* Delete */}
+      <button
+        onClick={() => onDeleteFurniture(selected.id)}
+        style={{
+          background: 'linear-gradient(135deg, #e74c3c 0%, #c0392b 100%)',
+          color: 'white',
+          border: 'none',
+          borderRadius: '8px',
+          padding: '14px',
+          cursor: 'pointer',
+          fontSize: '14px',
+          fontWeight: '700',
+          transition: 'all 0.2s'
+        }}
+        onMouseEnter={(e) => e.target.style.transform = 'scale(1.02)'}
+        onMouseLeave={(e) => e.target.style.transform = 'scale(1)'}
+      >
+         Delete Item
+      </button>
     </aside>
   );
-};
-
-const sideStyle = { 
-  width: '280px', 
-  background: '#000',
-  borderLeft: '1px solid #1a1a1a',
-  display: 'flex',
-  flexDirection: 'column',
-  overflowY: 'auto'
-};
-
-const headerStyle = {
-  padding: '20px',
-  borderBottom: '1px solid #1a1a1a',
-  display: 'flex',
-  alignItems: 'center',
-  gap: '12px'
-};
-
-const headerIconBoxStyle = {
-  width: '40px',
-  height: '40px',
-  background: 'linear-gradient(135deg, #10b981 0%, #059669 100%)',
-  borderRadius: '10px',
-  display: 'flex',
-  alignItems: 'center',
-  justifyContent: 'center',
-  fontSize: '18px',
-  boxShadow: '0 2px 10px rgba(16, 185, 129, 0.4)'
-};
-
-const headingStyle = {
-  margin: 0,
-  fontSize: '16px',
-  fontWeight: '700',
-  color: '#fff'
-};
-
-const contentStyle = {
-  padding: '20px',
-  flex: 1,
-  display: 'flex',
-  flexDirection: 'column',
-  gap: '16px'
-};
-
-const infoCardStyle = {
-  background: 'linear-gradient(135deg, #10b981 0%, #059669 100%)',
-  padding: '12px',
-  borderRadius: '10px',
-  boxShadow: '0 2px 12px rgba(16, 185, 129, 0.3)'
-};
-
-const itemHeaderStyle = {
-  display: 'flex',
-  alignItems: 'center',
-  gap: '14px'
-};
-
-const itemIconStyle = {
-  width: '40px',
-  height: '40px',
-  background: 'rgba(255, 255, 255, 0.2)',
-  borderRadius: '10px',
-  display: 'flex',
-  alignItems: 'center',
-  justifyContent: 'center',
-  fontSize: '20px'
-};
-
-const itemTitleStyle = {
-  fontSize: '18px',
-  fontWeight: '700',
-  color: '#fff',
-  textTransform: 'capitalize',
-  marginBottom: '4px'
-};
-
-const itemIdStyle = {
-  fontSize: '11px',
-  color: 'rgba(255, 255, 255, 0.8)',
-  fontFamily: 'monospace'
-};
-
-const controlCardStyle = {
-  background: '#0a0a0a',
-  padding: '16px',
-  borderRadius: '10px',
-  border: '1px solid #1a1a1a'
-};
-
-const cardHeaderStyle = {
-  fontSize: '12px',
-  fontWeight: '600',
-  color: '#fff',
-  marginBottom: '12px',
-  display: 'flex',
-  alignItems: 'center',
-  gap: '8px',
-  textTransform: 'uppercase',
-  letterSpacing: '0.5px'
-};
-
-const cardIconStyle = {
-  fontSize: '16px'
-};
-
-const colorPickerStyle = {
-  width: '100%',
-  height: '55px',
-  border: '1px solid #1a1a1a',
-  borderRadius: '8px',
-  cursor: 'pointer',
-  background: '#000'
-};
-
-const hintStyle = {
-  fontSize: '11px',
-  color: '#666',
-  marginTop: '8px',
-  fontStyle: 'italic'
-};
-
-const instructionsStyle = {
-  display: 'flex',
-  flexDirection: 'column',
-  gap: '8px'
-};
-
-const instructionItemStyle = {
-  display: 'flex',
-  alignItems: 'center',
-  gap: '12px',
-  fontSize: '13px',
-  color: '#aaa',
-  padding: '10px',
-  background: '#000',
-  borderRadius: '6px',
-  border: '1px solid #1a1a1a'
-};
-
-const kbdStyle = {
-  background: '#1a1a1a',
-  padding: '5px 12px',
-  borderRadius: '6px',
-  fontSize: '12px',
-  fontWeight: 'bold',
-  border: '1px solid #2a2a2a',
-  color: '#10b981',
-  fontFamily: 'monospace',
-  minWidth: '32px',
-  textAlign: 'center'
-};
-
-const deleteBtnStyle = {
-  width: '100%',
-  padding: '14px',
-  cursor: 'pointer',
-  background: 'linear-gradient(135deg, #ef4444 0%, #dc2626 100%)',
-  color: 'white',
-  border: 'none',
-  borderRadius: '10px',
-  fontSize: '14px',
-  fontWeight: '700',
-  display: 'flex',
-  alignItems: 'center',
-  justifyContent: 'center',
-  gap: '10px',
-  transition: 'transform 0.1s ease',
-  boxShadow: '0 2px 10px rgba(239, 68, 68, 0.3)',
-  marginTop: 'auto'
-};
-
-const emptyStateStyle = {
-  flex: 1,
-  display: 'flex',
-  flexDirection: 'column',
-  alignItems: 'center',
-  justifyContent: 'center',
-  padding: '50px 30px',
-  textAlign: 'center'
-};
-
-const emptyIconStyle = {
-  fontSize: '70px',
-  marginBottom: '20px',
-  opacity: 0.3
-};
-
-const emptyTitleStyle = {
-  fontSize: '18px',
-  fontWeight: '700',
-  color: '#fff',
-  marginBottom: '10px'
-};
-
-const emptyTextStyle = {
-  fontSize: '13px',
-  color: '#666',
-  lineHeight: '1.6'
 };
 
 export default RightSidebar;
