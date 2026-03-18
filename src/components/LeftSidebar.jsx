@@ -162,7 +162,7 @@ const LeftSidebar = ({ roomDimensions, onRoomChange, onAddFurniture }) => {
       flexShrink: 0,
     }}>
 
-      {/* ── ROOM SETUP ───────────────────────────────────────────────────── */}
+      {/* ROOM SETUP */}
       <div style={{ marginBottom: '16px' }}>
         <SectionBtn
           label="ROOM SETUP"
@@ -237,7 +237,7 @@ const LeftSidebar = ({ roomDimensions, onRoomChange, onAddFurniture }) => {
 
       <div style={{ height: '1px', background: '#1a2a1a', margin: '4px 0 16px' }} />
 
-      {/* ── FURNITURE ────────────────────────────────────────────────────── */}
+      {/* FURNITURE */}
       <div>
         <SectionBtn
           label="FURNITURE"
@@ -289,7 +289,7 @@ const LeftSidebar = ({ roomDimensions, onRoomChange, onAddFurniture }) => {
                   </span>
                   <span>{ft.label}</span>
                   <span style={{ fontSize: '11px', color: '#1adb8a', fontWeight: '700' }}>
-                    ${ft.price}
+                    LKR {ft.price}
                   </span>
                 </button>
               );

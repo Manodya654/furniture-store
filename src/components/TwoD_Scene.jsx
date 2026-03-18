@@ -7,7 +7,7 @@ const TwoD_Scene = ({ onSelect, selected, roomDimensions, furniture, onUpdateFur
   const [dragging, setDragging] = useState(null);
   const [dragStart, setDragStart] = useState(null);
   const [panning, setPanning] = useState(false);
-  const [panStart, setPanStart] = useState(null);
+  const [panStart, setPanStart] = useState(null); 
 
   const getFurnitureSize = (type) => {
     const sizes = {

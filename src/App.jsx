@@ -24,9 +24,9 @@ function App() {
   const [toasts, setToasts] = useState([]);
 
   const [roomDimensions, setRoomDimensions] = useState({
-    width: 6,
-    height: 3,
-    depth: 5,
+    width: 8,
+    height: 2.5,
+    depth: 8,
     wallColor: '#e8e8e8',
     floorStyle: 'tiles',
     floorColor: '#d4b896',
