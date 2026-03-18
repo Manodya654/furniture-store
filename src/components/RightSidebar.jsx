@@ -194,7 +194,7 @@ const RightSidebar = ({ selected, onUpdateFurniture, onDeleteFurniture, furnitur
                   </span>
                 </div>
                 <span style={{ color: '#e0e0e0', fontWeight: '600' }}>
-                  ${(item.price || PRICE_MAP[item.type] || 0).toLocaleString()}
+                  LKR {(item.price || PRICE_MAP[item.type] || 0).toLocaleString()}
                 </span>
               </div>
             ))
@@ -220,7 +220,7 @@ const RightSidebar = ({ selected, onUpdateFurniture, onDeleteFurniture, furnitur
             WebkitTextFillColor: 'transparent',
             backgroundClip: 'text',
           }}>
-            ${totalPrice.toLocaleString()}
+            LKR {totalPrice.toLocaleString()}
           </span>
         </div>
       </div>
@@ -295,11 +295,11 @@ const RightSidebar = ({ selected, onUpdateFurniture, onDeleteFurniture, furnitur
               background: 'rgba(26,219,138,0.15)',
               padding: '4px 8px', borderRadius: '6px', flexShrink: 0,
             }}>
-              ${(selected.price || PRICE_MAP[selected.type] || 0).toLocaleString()}
+              LKR {(selected.price || PRICE_MAP[selected.type] || 0).toLocaleString()}
             </div>
           </div>
 
-          {/* ── COLOR ────────────────────────────────────────────────────── */}
+          {/* ── COLOR  */}
           <div>
             <Lbl text="Color" />
             <input
@@ -310,9 +310,9 @@ const RightSidebar = ({ selected, onUpdateFurniture, onDeleteFurniture, furnitur
             />
           </div>
 
-          {/* ── POSITION ─────────────────────────────────────────────────── */}
+          {/* ── POSITION  */}
           <div>
-            <Lbl text="Position (floor only)" />
+            <Lbl text="Position" />
             <div style={{ display: 'flex', gap: '6px' }}>
               {['x', 'z'].map(ax => (
                 <div key={ax} style={{ flex: 1 }}>

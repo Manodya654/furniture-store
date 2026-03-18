@@ -1,14 +1,14 @@
 import { useState } from 'react';
 
 export const FURNITURE_CATALOGUE = [
-  { type: 'chair',      label: 'Chair',      color: '#8B7355', price: 149 },
-  { type: 'table',      label: 'Table',      color: '#A0856C', price: 349 },
-  { type: 'sofa',       label: 'Sofa',       color: '#6B8E7B', price: 899 },
-  { type: 'bed',        label: 'Bed',        color: '#7B6E8E', price: 699 },
-  { type: 'desk',       label: 'Desk',       color: '#8B7355', price: 299 },
-  { type: 'lamp',       label: 'Lamp',       color: '#C4A86B', price:  89 },
-  { type: 'cupboard',   label: 'Cupboard',   color: '#7A6248', price: 449 },
-  { type: 'dining_set', label: 'Dining Set', color: '#A0856C', price: 999 },
+  { type: 'chair',      label: 'Chair',      color: '#8B7355', price: 20000 },
+  { type: 'table',      label: 'Table',      color: '#A0856C', price: 50000 },
+  { type: 'sofa',       label: 'Sofa',       color: '#6B8E7B', price: 150000 },
+  { type: 'bed',        label: 'Bed',        color: '#7B6E8E', price: 200000 },
+  { type: 'desk',       label: 'Desk',       color: '#8B7355', price: 12000 },
+  { type: 'vase',       label: 'Vase',       color: '#C4A86B', price:  9000 },
+  { type: 'cupboard',   label: 'Cupboard',   color: '#7A6248', price: 10000 },
+  { type: 'dining_set', label: 'Dining Set', color: '#A0856C', price: 25000 },
 ];
 
 export const PRICE_MAP = Object.fromEntries(
