@@ -11,10 +11,15 @@ import HomePage from "./pages/HomePage";
 import GalleryPage from "./pages/GalleryPage";
 
 function App() {
-  const [currentPage, setCurrentPage] = useState('login');
+  // පද්ධතිය Refresh වූ විට අවසානයට සිටි පිටුව මතක තබා ගනී
+  const [currentPage, setCurrentPage] = useState(() => {
+    return localStorage.getItem("active_view") || 'home';
+  });
+
+  const [furniture, setFurniture] = useState([]);
   const [viewMode, setViewMode] = useState('3d');
   const [selected, setSelected] = useState(null);
-  const [furniture, setFurniture] = useState([]);
+ 
   const [savedDesigns, setSavedDesigns] = useState([]);
   const [currentDesignName, setCurrentDesignName] = useState('Untitled Design');
   const [toasts, setToasts] = useState([]);
@@ -28,91 +33,12 @@ function App() {
     floorColor: '#d4b896'
   });
 
-  // Toast notification system
-  const showToast = useCallback((message, type = 'info') => {
-    const id = Date.now() + Math.random();
-    setToasts(prev => [...prev, { id, message, type }]);
-    setTimeout(() => {
-      setToasts(prev => prev.filter(t => t.id !== id));
-    }, 3500);
-  }, []);
+  // පිටුව මාරු වන විට එය localStorage හි Save කරයි
+  useEffect(() => {
+    localStorage.setItem("active_view", currentPage);
+  }, [currentPage]);
 
-  const removeToast = useCallback((id) => {
-    setToasts(prev => prev.filter(t => t.id !== id));
-  }, []);
-
-  const handleAddFurniture = (item) => {
-    setFurniture(prev => [...prev, item]);
-    showToast(`${item.name || item.type} added to room`, 'success');
-  };
-
-  const handleUpdateFurniture = (id, updates) => {
-    if (updates._shouldDelete) {
-      setFurniture(prev => prev.filter(item => item.id !== id));
-      if (selected?.id === id) setSelected(null);
-      showToast('Item deleted', 'warning');
-      return;
-    }
-    setFurniture(prev => prev.map(item =>
-      item.id === id ? { ...item, ...updates } : item
-    ));
-  };
-
-  const handleDeleteFurniture = (id) => {
-    const item = furniture.find(f => f.id === id);
-    setFurniture(prev => prev.filter(item => item.id !== id));
-    if (selected?.id === id) setSelected(null);
-    showToast(`${item?.name || item?.type || 'Item'} deleted`, 'warning');
-  };
-
-  const handleSaveDesign = (name) => {
-    const design = {
-      id: Date.now().toString(),
-      name: name || currentDesignName,
-      timestamp: new Date().toISOString(),
-      roomDimensions: { ...roomDimensions },
-      furniture: furniture.map(item => ({ ...item }))
-    };
-    setSavedDesigns(prev => [...prev, design]);
-    setCurrentDesignName(name || currentDesignName);
-    showToast(`Design "${design.name}" saved successfully`, 'success');
-    return design;
-  };
-
-  const handleLoadDesign = (design) => {
-    setRoomDimensions({ ...design.roomDimensions });
-    setFurniture([...design.furniture]);
-    setCurrentDesignName(design.name);
-    setSelected(null);
-    setCurrentPage('designer');
-    showToast(`Design "${design.name}" loaded`, 'info');
-  };
-
-  const handleDeleteDesign = (id) => {
-    const design = savedDesigns.find(d => d.id === id);
-    setSavedDesigns(prev => prev.filter(d => d.id !== id));
-    showToast(`Design "${design?.name}" deleted`, 'warning');
-  };
-
-  const handleNewDesign = () => {
-    setFurniture([]);
-    setSelected(null);
-    setCurrentDesignName('Untitled Design');
-    setRoomDimensions({
-      width: 6,
-      height: 3,
-      depth: 5,
-      wallColor: '#e8e8e8',
-      floorStyle: 'tiles',
-      floorColor: '#d4b896'
-    });
-    showToast('New design created', 'info');
-  };
-
-  if (currentPage === 'login') {
-    return <LoginPage onLogin={() => setCurrentPage('home')} />;
-  }
-
+  // --- View Navigation ---
   if (currentPage === 'home') {
     return (
       <HomePage

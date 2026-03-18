@@ -22,7 +22,7 @@ const HomePage = ({ onStartDesign, onOpenGallery, onLogout }) => {
 
       <main className="relative z-10 max-w-7xl mx-auto p-6 md:p-12">
         
-        {/* Hero Banner with Glass Effect */}
+       
         <div 
           onClick={onStartDesign}
           className="group relative h-[500px] rounded-[60px] mb-20 overflow-hidden cursor-pointer border border-white/10 hover:border-emerald-500/40 transition-all duration-1000 shadow-2xl shadow-emerald-900/10"
@@ -76,7 +76,7 @@ const HomePage = ({ onStartDesign, onOpenGallery, onLogout }) => {
           ))}
         </div>
 
-        {/* Feature Grid */}
+      
         <div className="space-y-12 mb-20">
           <div className="flex flex-col md:flex-row justify-between items-center md:items-end gap-6">
             <div className="text-center md:text-left">
