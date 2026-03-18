@@ -16,7 +16,8 @@ const TwoD_Scene = ({ onSelect, selected, roomDimensions, furniture, onUpdateFur
       sofa: { width: 2.0, depth: 0.9 },
       bed: { width: 1.8, depth: 2.2 },
       desk: { width: 1.2, depth: 0.6 },
-      lamp: { width: 0.4, depth: 0.4 }
+      vase: { width: 0.4, depth: 0.4 }
+
     };
     return sizes[type] || { width: 1, depth: 1 };
   };
@@ -24,11 +25,11 @@ const TwoD_Scene = ({ onSelect, selected, roomDimensions, furniture, onUpdateFur
   const getFurnitureIcon = (type) => {
     const icons = {
       chair: '🪑',
-      table: '🪵',
+      table: '🪑',
       sofa: '🛋️',
       bed: '🛏️',
       desk: '🗄️',
-      lamp: '💡'
+      vase: '🏺'
     };
     return icons[type] || '📦';
   };
