@@ -337,6 +337,7 @@ function App() {
           selected={selected}
           onUpdateFurniture={handleUpdateFurniture}
           onDeleteFurniture={handleDeleteFurniture}
+          furniture={furniture}
         />
       </div>
     </div>
